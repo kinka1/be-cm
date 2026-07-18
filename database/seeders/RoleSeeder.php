@@ -11,17 +11,17 @@ class RoleSeeder extends Seeder
     {
         Role::query()->updateOrCreate(
             ['role_name' => 'operator'],
-            ['permissions' => json_encode([])]
+            ['permissions' => []]
         );
 
         Role::query()->updateOrCreate(
             ['role_name' => 'supervisor'],
-            ['permissions' => json_encode([])]
+            ['permissions' => []]
         );
 
         Role::query()->updateOrCreate(
             ['role_name' => 'admin'],
-            ['permissions' => json_encode([])]
+            ['permissions' => []]
         );
     }
 }

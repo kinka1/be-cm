@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Recipe extends Model
 {
@@ -12,4 +13,14 @@ class Recipe extends Model
         'quantity_needed',
         'unit',
     ];
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Product::class, 'ingredient_id');
+    }
 }

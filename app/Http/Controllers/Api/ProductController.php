@@ -104,4 +104,29 @@ class ProductController extends Controller
             'data' => null,
         ]);
     }
+
+    public function deleted(Request $request): JsonResponse
+    {
+        return response()->json([
+            'status' => 'sukses',
+            'message' => 'ok',
+            'data' => Product::onlyTrashed()->paginate($request->integer('per_page', 15)),
+        ]);
+    }
+
+    public function restore(int $id): JsonResponse
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+        $product->restore();
+
+        return response()->json(['status' => 'sukses', 'message' => 'restored', 'data' => $product]);
+    }
+
+    public function forceDelete(int $id): JsonResponse
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+        $product->forceDelete();
+
+        return response()->json(['status' => 'sukses', 'message' => 'force deleted', 'data' => null]);
+    }
 }

@@ -11,7 +11,7 @@ class StockTransactionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = StockTransaction::query()->orderByDesc('transaction_date');
+        $query = StockTransaction::query()->with(['product', 'employee'])->orderByDesc('transaction_date');
 
         if ($request->filled('product_id')) {
             $query->where('product_id', $request->integer('product_id'));
@@ -21,14 +21,35 @@ class StockTransactionController extends Controller
             $query->where('employee_id', $request->integer('employee_id'));
         }
 
+        if ($request->filled('category_id')) {
+            $query->whereHas('product', fn ($builder) => $builder->where('category_id', $request->integer('category_id')));
+        }
+
         if ($request->filled('transaction_type')) {
             $query->where('transaction_type', $request->string('transaction_type'));
+        }
+
+        if ($request->filled('reference_type')) {
+            $query->where('reference_type', $request->string('reference_type'));
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('transaction_date', '>=', $request->date('from_date'));
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('transaction_date', '<=', $request->date('to_date'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search');
+            $query->whereHas('product', fn ($builder) => $builder->where('product_name', 'like', "%{$search}%")->orWhere('sku', 'like', "%{$search}%"));
         }
 
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $query->paginate(15),
+            'data' => $query->paginate($request->integer('per_page', 15)),
         ]);
     }
 
