@@ -49,7 +49,7 @@ jobs:
             --exclude='.env' \
             --exclude='node_modules' \
             --exclude='tests' \
-            -czf backend.tar.gz .
+            -czf "$RUNNER_TEMP/backend.tar.gz" .
 
       - name: Prepare SSH
         env:
@@ -71,7 +71,7 @@ jobs:
           scp \
             -i ~/.ssh/deploy_key \
             -P "$VPS_PORT" \
-            backend.tar.gz \
+            "$RUNNER_TEMP/backend.tar.gz" \
             "$VPS_USER@$VPS_HOST:/home/deploy/releases/backend/backend.tar.gz"
 
       - name: Activate Laravel deployment
