@@ -9,6 +9,16 @@ use OpenApi\Attributes as OA;
 #[OA\SecurityScheme(securityScheme: 'BearerAuth', type: 'http', scheme: 'bearer', bearerFormat: 'JWT')]
 class ApiDocs
 {
+    #[OA\Get(
+        path: '/api/health',
+        summary: 'Health check',
+        tags: ['System'],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function health(): void
+    {
+    }
+
     #[OA\Post(
         path: '/api/auth/register',
         summary: 'Register user',

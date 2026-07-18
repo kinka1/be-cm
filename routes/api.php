@@ -28,6 +28,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::model('table', CalonMantu::class);
 
+Route::get('health', fn () => response()->json([
+    'status' => 'sukses',
+    'message' => 'ok',
+    'data' => [
+        'service' => config('app.name'),
+        'timestamp' => now()->toISOString(),
+    ],
+]));
+
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);

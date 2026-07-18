@@ -12,6 +12,20 @@
         }
     ],
     "paths": {
+        "/api/health": {
+            "get": {
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health check",
+                "operationId": "bc7fb1b3517ef071532bd29962bb1ce1",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/auth/register": {
             "post": {
                 "tags": [
@@ -2779,6 +2793,10 @@
         }
     },
     "tags": [
+        {
+            "name": "System",
+            "description": "System"
+        },
         {
             "name": "Auth",
             "description": "Auth"
