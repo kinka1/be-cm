@@ -702,6 +702,39 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(
+        path: '/api/revenue/summary',
+        summary: 'Get revenue summary with daily details',
+        tags: ['Revenue Reports'],
+        parameters: [
+            new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'from_date', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'to_date', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris'])),
+        ],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function revenueSummary(): void
+    {
+    }
+
+    #[OA\Get(
+        path: '/api/revenue/daily',
+        summary: 'Get daily revenue',
+        tags: ['Revenue Reports'],
+        parameters: [
+            new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris'])),
+            new OA\Parameter(name: 'include_orders', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function dailyRevenue(): void
+    {
+    }
+
     #[OA\Post(path: '/api/payments/midtrans/webhook', summary: 'Midtrans payment webhook', tags: ['Payments'], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function midtransWebhook(): void
     {

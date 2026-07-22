@@ -4294,6 +4294,121 @@
                 }
             }
         },
+        "/api/revenue/summary": {
+            "get": {
+                "tags": [
+                    "Revenue Reports"
+                ],
+                "summary": "Get revenue summary with daily details",
+                "operationId": "fd653f4afc53077fffb3f6f502bbf3ba",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "payment_method",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "qris"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/revenue/daily": {
+            "get": {
+                "tags": [
+                    "Revenue Reports"
+                ],
+                "summary": "Get daily revenue",
+                "operationId": "1fa94c66c47f4aa858d1b5b95bc3343d",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "payment_method",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "cash",
+                                "qris"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "include_orders",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/payments/midtrans/webhook": {
             "post": {
                 "tags": [
@@ -4394,6 +4509,10 @@
         {
             "name": "Product Batches",
             "description": "Product Batches"
+        },
+        {
+            "name": "Revenue Reports",
+            "description": "Revenue Reports"
         },
         {
             "name": "Payments",

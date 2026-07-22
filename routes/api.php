@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Pos\OrderController;
 use App\Http\Controllers\Api\Pos\OrderStatusController;
 use App\Http\Controllers\Api\Pos\QrOrderController;
 use App\Http\Controllers\Api\RecipeController;
+use App\Http\Controllers\Api\RevenueReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
@@ -94,6 +95,8 @@ Route::post('product-batches', [ProductBatchController::class, 'store']);
 Route::get('assets/summary', [AssetSummaryController::class, 'summary']);
 Route::get('assets/low-stock-summary', [AssetSummaryController::class, 'lowStockSummary']);
 Route::get('assets/stock-movement-summary', [AssetSummaryController::class, 'stockMovementSummary']);
+Route::get('revenue/summary', [RevenueReportController::class, 'summary']);
+Route::get('revenue/daily', [RevenueReportController::class, 'daily']);
 
 Route::prefix('pos')->group(function () {
     Route::get('menu', [MenuController::class, 'index']);
