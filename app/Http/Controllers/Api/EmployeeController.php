@@ -22,6 +22,10 @@ class EmployeeController extends Controller
             $query->where('role_id', $request->integer('role_id'));
         }
 
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }
@@ -45,6 +49,7 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'email' => ['required', 'email', 'max:255', 'unique:employees,email', 'unique:users,email'],
             'join_date' => ['required', 'date'],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
@@ -60,6 +65,7 @@ class EmployeeController extends Controller
 
             $employee = Employee::create([
                 'full_name' => $validated['full_name'],
+                'store_id' => $validated['store_id'],
                 'email' => $validated['email'],
                 'join_date' => $validated['join_date'],
                 'role_id' => $validated['role_id'],
@@ -68,8 +74,11 @@ class EmployeeController extends Controller
                 'status' => 'active',
             ]);
 
+            $employee->stores()->sync([$validated['store_id']]);
+
             User::create([
                 'employee_id' => $employee->id,
+                'current_store_id' => $validated['store_id'],
                 'name' => $employee->full_name,
                 'username' => $validated['username'],
                 'email' => $employee->email,
@@ -99,6 +108,7 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'full_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'store_id' => ['sometimes', 'required', 'integer', 'exists:stores,id'],
             'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('employees', 'email')->ignore($employee->id), Rule::unique('users', 'email')->ignore($employee->id, 'employee_id')],
             'join_date' => ['sometimes', 'required', 'date'],
             'role_id' => ['sometimes', 'required', 'integer', 'exists:roles,id'],
@@ -120,6 +130,11 @@ class EmployeeController extends Controller
 
             $employee->fill(collect($validated)->except(['ktp', 'kk'])->toArray());
             $employee->save();
+
+            if (array_key_exists('store_id', $validated)) {
+                $employee->stores()->syncWithoutDetaching([$validated['store_id']]);
+                User::where('employee_id', $employee->id)->update(['current_store_id' => $validated['store_id']]);
+            }
 
             User::where('employee_id', $employee->id)->update([
                 'name' => $employee->full_name,

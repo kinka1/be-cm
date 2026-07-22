@@ -16,14 +16,15 @@ class StockOpnameController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = StockOpname::query()->with('items')->orderByDesc('opname_date');
+        if ($request->filled('store_id')) $query->where('store_id', $request->integer('store_id'));
         if ($request->filled('status')) $query->where('status', $request->string('status'));
         return response()->json(['status' => 'sukses', 'message' => 'ok', 'data' => $query->paginate($request->integer('per_page', 15))]);
     }
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate(['employee_id' => ['nullable','exists:employees,id'], 'opname_date' => ['required','date'], 'notes' => ['nullable','string']]);
-        $opname = StockOpname::create(['opname_number' => 'OPN-'.now()->format('YmdHis').'-'.random_int(1000,9999), 'employee_id' => $data['employee_id'] ?? null, 'opname_date' => $data['opname_date'], 'notes' => $data['notes'] ?? null]);
+        $data = $request->validate(['store_id' => ['required','exists:stores,id'], 'employee_id' => ['nullable','exists:employees,id'], 'opname_date' => ['required','date'], 'notes' => ['nullable','string']]);
+        $opname = StockOpname::create(['store_id' => $data['store_id'], 'opname_number' => 'OPN-'.now()->format('YmdHis').'-'.random_int(1000,9999), 'employee_id' => $data['employee_id'] ?? null, 'opname_date' => $data['opname_date'], 'notes' => $data['notes'] ?? null]);
         return response()->json(['status' => 'sukses', 'message' => 'created', 'data' => $opname], 201);
     }
 
@@ -33,7 +34,7 @@ class StockOpnameController extends Controller
     {
         if ($stockOpname->status !== 'draft') return response()->json(['status' => 'gagal', 'message' => 'opname bukan draft', 'data' => null], 422);
         $data = $request->validate(['product_id' => ['required','exists:products,id'], 'physical_stock' => ['required','numeric'], 'notes' => ['nullable','string']]);
-        $product = Product::findOrFail($data['product_id']);
+        $product = Product::query()->where('store_id', $stockOpname->store_id)->findOrFail($data['product_id']);
         $item = StockOpnameItem::updateOrCreate(['stock_opname_id' => $stockOpname->id, 'product_id' => $product->id], ['system_stock' => $product->current_stock, 'physical_stock' => $data['physical_stock'], 'difference' => (float) $data['physical_stock'] - (float) $product->current_stock, 'notes' => $data['notes'] ?? null]);
         return response()->json(['status' => 'sukses', 'message' => 'saved', 'data' => $item]);
     }
@@ -50,7 +51,7 @@ class StockOpnameController extends Controller
         DB::transaction(function () use ($stockOpname, $data) {
             foreach ($stockOpname->items as $item) {
                 if ((float) $item->difference === 0.0) continue;
-                StockTransaction::create(['product_id' => $item->product_id, 'transaction_type' => $item->difference > 0 ? 'in' : 'out', 'quantity' => abs((float) $item->difference), 'reference_type' => 'adjustment', 'reference_id' => $stockOpname->id, 'employee_id' => $data['approved_by'] ?? null, 'notes' => 'Stock opname '.$stockOpname->opname_number, 'transaction_date' => now(), 'created_at' => now()]);
+                StockTransaction::create(['store_id' => $stockOpname->store_id, 'product_id' => $item->product_id, 'transaction_type' => $item->difference > 0 ? 'in' : 'out', 'quantity' => abs((float) $item->difference), 'reference_type' => 'adjustment', 'reference_id' => $stockOpname->id, 'employee_id' => $data['approved_by'] ?? null, 'notes' => 'Stock opname '.$stockOpname->opname_number, 'transaction_date' => now(), 'created_at' => now()]);
             }
             $stockOpname->update(['status' => 'approved', 'approved_by' => $data['approved_by'] ?? null, 'approved_at' => now()]);
         });

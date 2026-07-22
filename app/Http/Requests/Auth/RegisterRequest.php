@@ -19,6 +19,7 @@ class RegisterRequest extends FormRequest
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'full_name' => ['required', 'string', 'max:255'],
+            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'join_date' => ['required', 'date'],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
         ];

@@ -10,6 +10,7 @@ class StockTransaction extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'store_id',
         'product_id',
         'transaction_type',
         'quantity',

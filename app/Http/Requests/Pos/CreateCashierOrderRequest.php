@@ -15,6 +15,7 @@ class CreateCashierOrderRequest extends FormRequest
     {
         return [
             'order_type' => ['required', 'in:dine_in_cashier,takeaway'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'table_id' => ['nullable', 'integer', 'exists:calon_mantu,id'],
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
             'customer_name' => ['nullable', 'string', 'max:255'],

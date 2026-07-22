@@ -11,6 +11,7 @@ class CalonMantu extends Model
     const UPDATED_AT = null;
 
     protected $fillable = [
+        'store_id',
         'table_number',
         'qr_code',
         'capacity',

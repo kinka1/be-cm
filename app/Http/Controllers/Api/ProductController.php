@@ -18,6 +18,10 @@ class ProductController extends Controller
             $query->where('category_id', $request->integer('category_id'));
         }
 
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
+
         if ($request->filled('is_active')) {
             $query->where('is_active', filter_var($request->string('is_active'), FILTER_VALIDATE_BOOLEAN));
         }
@@ -41,8 +45,9 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'product_name' => ['required', 'string', 'max:255'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'sku' => ['required', 'string', 'max:255', 'unique:products,sku'],
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('store_id', $request->integer('store_id'))],
             'description' => ['nullable', 'string'],
             'unit_of_measure' => ['required', 'string', 'max:50'],
             'minimum_stock' => ['nullable', 'numeric', 'min:0'],
@@ -72,10 +77,13 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): JsonResponse
     {
+        $storeId = $request->integer('store_id') ?: $product->store_id;
+
         $validated = $request->validate([
             'product_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'store_id' => ['sometimes', 'required', 'integer', 'exists:stores,id'],
             'sku' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('products', 'sku')->ignore($product->id)],
-            'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
+            'category_id' => ['sometimes', 'required', 'integer', Rule::exists('categories', 'id')->where('store_id', $storeId)],
             'description' => ['nullable', 'string'],
             'unit_of_measure' => ['sometimes', 'required', 'string', 'max:50'],
             'minimum_stock' => ['nullable', 'numeric', 'min:0'],

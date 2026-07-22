@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssetSummaryController;
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\Payments\MidtransWebhookController;
 use App\Http\Controllers\Api\Pos\CashierOrderController;
+use App\Http\Controllers\Api\Pos\CashierSessionController;
 use App\Http\Controllers\Api\Pos\MenuController;
 use App\Http\Controllers\Api\Pos\OrderController;
 use App\Http\Controllers\Api\Pos\OrderStatusController;
@@ -21,6 +23,7 @@ use App\Http\Controllers\Api\StockAdjustmentController;
 use App\Http\Controllers\Api\StockAlertController;
 use App\Http\Controllers\Api\StockCardController;
 use App\Http\Controllers\Api\StockOpnameController;
+use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TableController;
 use App\Models\CalonMantu;
@@ -44,10 +47,18 @@ Route::prefix('auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
+    Route::get('me/stores', [AuthController::class, 'stores']);
+    Route::post('me/current-store', [AuthController::class, 'updateCurrentStore']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::get('attendances/today', [AttendanceController::class, 'today']);
+    Route::get('attendances/summary', [AttendanceController::class, 'summary']);
+    Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn']);
+    Route::post('attendances/clock-out', [AttendanceController::class, 'clockOut']);
+    Route::apiResource('attendances', AttendanceController::class);
 });
 
 Route::apiResource('roles', RoleController::class);
+Route::apiResource('stores', StoreController::class);
 Route::apiResource('employees', EmployeeController::class);
 Route::apiResource('categories', CategoryController::class);
 Route::get('products/deleted', [ProductController::class, 'deleted']);
@@ -87,6 +98,15 @@ Route::get('assets/stock-movement-summary', [AssetSummaryController::class, 'sto
 Route::prefix('pos')->group(function () {
     Route::get('menu', [MenuController::class, 'index']);
     Route::get('tables/{qr_code}/menu', [MenuController::class, 'tableMenu']);
+    Route::post('cashier-sessions/open', [CashierSessionController::class, 'open']);
+    Route::get('cashier-sessions/current', [CashierSessionController::class, 'current']);
+    Route::get('cashier-sessions', [CashierSessionController::class, 'index']);
+    Route::get('cashier-sessions/{cashierSession}', [CashierSessionController::class, 'show']);
+    Route::post('cashier-sessions/{cashierSession}/cash-movements', [CashierSessionController::class, 'addCashMovement']);
+    Route::post('cashier-sessions/{cashierSession}/close', [CashierSessionController::class, 'close']);
+    Route::get('cashier-sessions/{cashierSession}/summary', [CashierSessionController::class, 'summary']);
+    Route::get('cashier-sessions/{cashierSession}/orders', [CashierSessionController::class, 'orders']);
+    Route::get('cashier-sessions/{cashierSession}/cash-movements', [CashierSessionController::class, 'cashMovements']);
     Route::post('qr-orders', [QrOrderController::class, 'store']);
     Route::post('cashier-orders', [CashierOrderController::class, 'store']);
     Route::get('orders', [OrderController::class, 'index']);

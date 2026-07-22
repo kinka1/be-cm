@@ -70,6 +70,9 @@
                                     "full_name": {
                                         "type": "string"
                                     },
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "join_date": {
                                         "type": "string",
                                         "format": "date"
@@ -137,6 +140,65 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/me/stores": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "List stores accessible by current user",
+                "operationId": "1b467a7795a9c14023c57ca528930482",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/me/current-store": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Set current active store",
+                "operationId": "682724016299e85167ee9adc76331c49",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "store_id"
+                                ],
+                                "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -295,6 +357,187 @@
                 }
             }
         },
+        "/api/stores": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "List stores",
+                "operationId": "6236ceaddb14559ab27f8a462c0c35d6",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Create store",
+                "operationId": "09b5356da01d03e11e97de4b62541afd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "store_name",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "store_name": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/api/stores/{id}": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Get store",
+                "operationId": "01321b21d04acdd40795df20505f2468",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Update store",
+                "operationId": "9ce8a9433e7a2f706fccdbf36bc45e6b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "store_name": {
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Delete store",
+                "operationId": "c0ef9987e4c806c37aa928ab375db188",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "422": {
+                        "description": "Store has products or orders"
+                    }
+                }
+            }
+        },
         "/api/employees": {
             "get": {
                 "tags": [
@@ -302,6 +545,40 @@
                 ],
                 "summary": "List employees",
                 "operationId": "790369cb411d82ddaad0e93ef28c7133",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -321,6 +598,7 @@
                             "schema": {
                                 "required": [
                                     "full_name",
+                                    "store_id",
                                     "email",
                                     "join_date",
                                     "role_id",
@@ -333,6 +611,9 @@
                                 "properties": {
                                     "full_name": {
                                         "type": "string"
+                                    },
+                                    "store_id": {
+                                        "type": "integer"
                                     },
                                     "email": {
                                         "type": "string",
@@ -445,6 +726,482 @@
                 }
             }
         },
+        "/api/attendances": {
+            "get": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "List attendances",
+                "operationId": "4ae898ccc81ba17896ed3884c3021180",
+                "parameters": [
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "hadir",
+                                "izin",
+                                "sakit",
+                                "alpha"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Create attendance manually",
+                "operationId": "b65f8a3b62a2d06a65f62ee66d8d3d4e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "employee_id",
+                                    "date",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "clock_in": {
+                                        "type": "string",
+                                        "example": "08:00:00"
+                                    },
+                                    "clock_out": {
+                                        "type": "string",
+                                        "example": "17:00:00"
+                                    },
+                                    "photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "photo_url": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "hadir",
+                                            "izin",
+                                            "sakit",
+                                            "alpha"
+                                        ]
+                                    },
+                                    "location_coordinates": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendances/summary": {
+            "get": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Get attendance summary",
+                "operationId": "5bbde9e722d631f578c673e94c9f6f77",
+                "parameters": [
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendances/today": {
+            "get": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Get today attendance",
+                "operationId": "afa2cca847735711283227491849e6e8",
+                "parameters": [
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "422": {
+                        "description": "Employee required"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendances/clock-in": {
+            "post": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Clock in attendance",
+                "operationId": "c8bef3a0d0a3593783771230157660a6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "location_coordinates": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Clock in success"
+                    },
+                    "422": {
+                        "description": "Already clocked in"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendances/clock-out": {
+            "post": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Clock out attendance",
+                "operationId": "e5c00f63030c66af644e20ebf4b76566",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "location_coordinates": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Clock out success"
+                    },
+                    "422": {
+                        "description": "Not clocked in or already clocked out"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendances/{id}": {
+            "get": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Get attendance",
+                "operationId": "ac93ac2b95d29fc0d54d8338bdbc8536",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Update attendance",
+                "operationId": "44ee30cfadececb1965e385560375cf2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "employee_id",
+                                    "date",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "employee_id": {
+                                        "type": "integer"
+                                    },
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "clock_in": {
+                                        "type": "string",
+                                        "example": "08:00:00"
+                                    },
+                                    "clock_out": {
+                                        "type": "string",
+                                        "example": "17:00:00"
+                                    },
+                                    "photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "photo_url": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "hadir",
+                                            "izin",
+                                            "sakit",
+                                            "alpha"
+                                        ]
+                                    },
+                                    "location_coordinates": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Attendances"
+                ],
+                "summary": "Delete attendance",
+                "operationId": "088941ee2c0b9fb5172d654352786264",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/categories": {
             "get": {
                 "tags": [
@@ -452,6 +1209,16 @@
                 ],
                 "summary": "List categories",
                 "operationId": "9e4dd4f90a21893565d01944bc3c811e",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -470,9 +1237,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "category_name"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "category_name": {
                                         "type": "string"
                                     },
@@ -537,9 +1308,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "category_name"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "category_name": {
                                         "type": "string"
                                     },
@@ -588,6 +1363,40 @@
                 ],
                 "summary": "List products",
                 "operationId": "2a809ff9df1ddca8161fd35ee18ea6df",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -606,12 +1415,16 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "product_name",
                                     "sku",
                                     "category_id",
                                     "unit_of_measure"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "product_name": {
                                         "type": "string"
                                     },
@@ -935,6 +1748,90 @@
                 ],
                 "summary": "List stock transactions",
                 "operationId": "4993232e6f729e8985b3d54c87ca17a1",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "product_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "transaction_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "reference_type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -959,6 +1856,9 @@
                                     "reference_type"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "product_id": {
                                         "type": "integer"
                                     },
@@ -1014,6 +1914,56 @@
                 ],
                 "summary": "Get stock report",
                 "operationId": "2e929353ad6f9c3399925ff9358f6ede",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "product_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "low_stock_only",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -1029,6 +1979,14 @@
                 "summary": "List QR tables",
                 "operationId": "5723df7eb6b6ab8eab2bcdf3a876047d",
                 "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
                     {
                         "name": "status",
                         "in": "query",
@@ -1078,10 +2036,14 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "table_number",
                                     "capacity"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "table_number": {
                                         "type": "string"
                                     },
@@ -1157,12 +2119,16 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "table_number",
                                     "qr_code",
                                     "capacity",
                                     "status"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "table_number": {
                                         "type": "string"
                                     },
@@ -1280,6 +2246,14 @@
                     },
                     {
                         "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "store_id",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -1408,6 +2382,404 @@
                 }
             }
         },
+        "/api/pos/cashier-sessions/open": {
+            "post": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "Open cashier session",
+                "operationId": "8ca94cf2b629136f7ad4fd943f89493f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "store_id",
+                                    "opening_cash"
+                                ],
+                                "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
+                                    "opening_cash": {
+                                        "type": "number"
+                                    },
+                                    "opening_notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Opened"
+                    },
+                    "422": {
+                        "description": "Already open or invalid"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions/current": {
+            "get": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "Get current open cashier session",
+                "operationId": "019612a64f97d11f354948118bb6dd26",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions": {
+            "get": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "List cashier sessions",
+                "operationId": "6df7fa7fe85544f7141851ecb63694cc",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions/{id}": {
+            "get": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "Get cashier session detail",
+                "operationId": "7b0dcce8c52fe48c52af803f280c6345",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions/{id}/cash-movements": {
+            "get": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "List cashier session cash movements",
+                "operationId": "d1f245417b0645e81545bdd4ee664e28",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "Create cashier cash movement",
+                "operationId": "5ce3a85707ad6c00e6be29204e7799c1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cash_in",
+                                            "cash_out"
+                                        ]
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    },
+                                    "category": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "422": {
+                        "description": "Session closed"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions/{id}/close": {
+            "post": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "Close cashier session",
+                "operationId": "7e120de379161bbef73d50ec3883f7c7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "closing_cash"
+                                ],
+                                "properties": {
+                                    "closing_cash": {
+                                        "type": "number"
+                                    },
+                                    "closing_notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Closed"
+                    },
+                    "422": {
+                        "description": "Already closed"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions/{id}/summary": {
+            "get": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "Get cashier session summary",
+                "operationId": "b78383710a4445de397fea1089cd10ec",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/cashier-sessions/{id}/orders": {
+            "get": {
+                "tags": [
+                    "POS Cashier Sessions"
+                ],
+                "summary": "List cashier session orders",
+                "operationId": "f2d56ce1ee700a6512b4f61c7d2f9259",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/pos/cashier-orders": {
             "post": {
                 "tags": [
@@ -1422,6 +2794,7 @@
                             "schema": {
                                 "required": [
                                     "order_type",
+                                    "store_id",
                                     "employee_id",
                                     "payment_method",
                                     "items"
@@ -1433,6 +2806,9 @@
                                             "dine_in_cashier",
                                             "takeaway"
                                         ]
+                                    },
+                                    "store_id": {
+                                        "type": "integer"
                                     },
                                     "table_id": {
                                         "type": "integer"
@@ -1493,6 +2869,32 @@
                 ],
                 "summary": "List POS orders",
                 "operationId": "36a139b408ce1387323718944e17a716",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "order_status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "payment_status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -1653,6 +3055,14 @@
                 "operationId": "7c7ec156f9292db3b11f42ed14735919",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "category_id",
                         "in": "query",
                         "required": false,
@@ -1683,6 +3093,16 @@
                 ],
                 "summary": "Get stock alert summary",
                 "operationId": "3f6e281ea61dbf91517c8d50aa0a91dc",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -1762,6 +3182,14 @@
                 "operationId": "d0fc6b4542a9b80dd9c1a67afdea43af",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "category_id",
                         "in": "query",
                         "required": false,
@@ -1810,6 +3238,14 @@
                 "operationId": "042c399e1537be3e0582793fb2bfda54",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "required": false,
@@ -1856,9 +3292,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "supplier_name"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "supplier_name": {
                                         "type": "string"
                                     },
@@ -1940,10 +3380,14 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "supplier_name",
                                     "status"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "supplier_name": {
                                         "type": "string"
                                     },
@@ -2011,6 +3455,14 @@
                 "operationId": "5fcb177c1cbbb9003fbc0b40cdb2e340",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "required": false,
@@ -2059,10 +3511,14 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "order_date",
                                     "items"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "supplier_id": {
                                         "type": "integer"
                                     },
@@ -2158,10 +3614,14 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "order_date",
                                     "status"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "supplier_id": {
                                         "type": "integer"
                                     },
@@ -2253,6 +3713,14 @@
                 "operationId": "0e3314f2719e6d5f81e4dda89fe9c843",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "required": false,
@@ -2287,9 +3755,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
+                                    "store_id",
                                     "opname_date"
                                 ],
                                 "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
                                     "employee_id": {
                                         "type": "integer"
                                     },
@@ -2458,6 +3930,14 @@
                 "operationId": "3223574719c0f0fe572a9149810090fa",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "status",
                         "in": "query",
                         "required": false,
@@ -2622,6 +4102,14 @@
                 "operationId": "5460a05866ccb3055b08b49ee6c29077",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "product_id",
                         "in": "query",
                         "required": false,
@@ -2703,6 +4191,14 @@
                 "operationId": "bcf69e06a18de9258888988c23717e88",
                 "parameters": [
                     {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "days",
                         "in": "query",
                         "required": false,
@@ -2733,6 +4229,16 @@
                 ],
                 "summary": "Get asset summary",
                 "operationId": "42ff17e057774b8d238af2e567c61556",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -2747,6 +4253,16 @@
                 ],
                 "summary": "Get low stock summary",
                 "operationId": "d862dbed1865a27ff437eb946428c7ca",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -2761,6 +4277,16 @@
                 ],
                 "summary": "Get stock movement summary",
                 "operationId": "0bb73c15f8466abbe25b75135f6571d9",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -2806,8 +4332,16 @@
             "description": "Roles"
         },
         {
+            "name": "Stores",
+            "description": "Stores"
+        },
+        {
             "name": "Employees",
             "description": "Employees"
+        },
+        {
+            "name": "Attendances",
+            "description": "Attendances"
         },
         {
             "name": "Categories",
@@ -2832,6 +4366,10 @@
         {
             "name": "POS",
             "description": "POS"
+        },
+        {
+            "name": "POS Cashier Sessions",
+            "description": "POS Cashier Sessions"
         },
         {
             "name": "Asset Management",

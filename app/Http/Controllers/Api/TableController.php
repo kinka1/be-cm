@@ -18,6 +18,10 @@ class TableController extends Controller
             $query->where('status', $request->string('status'));
         }
 
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
+
         if ($request->filled('search')) {
             $search = $request->string('search');
             $query->where(function ($builder) use ($search) {
@@ -37,12 +41,14 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'table_number' => ['required', 'string', 'max:255'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'qr_code' => ['nullable', 'string', 'max:255', 'unique:calon_mantu,qr_code'],
             'capacity' => ['required', 'integer', 'min:1'],
             'status' => ['nullable', 'in:available,occupied,reserved'],
         ]);
 
         $table = CalonMantu::create([
+            'store_id' => $validated['store_id'],
             'table_number' => $validated['table_number'],
             'qr_code' => $validated['qr_code'] ?? $this->generateQrCode($validated['table_number']),
             'capacity' => $validated['capacity'],
@@ -70,6 +76,7 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'table_number' => ['required', 'string', 'max:255'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
             'qr_code' => ['required', 'string', 'max:255', Rule::unique('calon_mantu', 'qr_code')->ignore($table->id)],
             'capacity' => ['required', 'integer', 'min:1'],
             'status' => ['required', 'in:available,occupied,reserved'],

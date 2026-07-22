@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\StockTransaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,10 @@ class StockTransactionController extends Controller
 
         if ($request->filled('product_id')) {
             $query->where('product_id', $request->integer('product_id'));
+        }
+
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
         }
 
         if ($request->filled('employee_id')) {
@@ -57,6 +62,7 @@ class StockTransactionController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
+            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'transaction_type' => ['required', 'in:in,out,adjustment'],
             'quantity' => ['required', 'numeric'],
             'reference_type' => ['required', 'in:purchase,sale,adjustment'],
@@ -66,7 +72,10 @@ class StockTransactionController extends Controller
             'transaction_date' => ['nullable', 'date'],
         ]);
 
+        $product = Product::findOrFail($validated['product_id']);
+
         $transaction = StockTransaction::create([
+            'store_id' => $validated['store_id'] ?? $product->store_id,
             'product_id' => $validated['product_id'],
             'transaction_type' => $validated['transaction_type'],
             'quantity' => $validated['quantity'],

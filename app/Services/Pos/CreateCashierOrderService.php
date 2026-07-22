@@ -5,6 +5,8 @@ namespace App\Services\Pos;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Payment;
+use App\Models\CalonMantu;
+use App\Models\CashierSession;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,7 +22,15 @@ class CreateCashierOrderService
 
     public function create(array $data): Order
     {
-        $totals = $this->orderTotalService->calculate($data['items'], (float) ($data['discount'] ?? 0));
+        if (!empty($data['table_id'])) {
+            $tableStoreId = CalonMantu::query()->whereKey($data['table_id'])->value('store_id');
+
+            if ((int) $tableStoreId !== (int) $data['store_id']) {
+                throw ValidationException::withMessages(['table_id' => ['Meja tidak tersedia pada toko yang dipilih']]);
+            }
+        }
+
+        $totals = $this->orderTotalService->calculate($data['items'], (float) ($data['discount'] ?? 0), 0, (int) $data['store_id']);
 
         [$stockOk, $stockMessage] = $this->stockAvailabilityService->validate($totals['details']);
 
@@ -32,13 +42,26 @@ class CreateCashierOrderService
             throw ValidationException::withMessages(['amount_paid' => ['Jumlah pembayaran kurang dari total order']]);
         }
 
-        return DB::transaction(function () use ($data, $totals) {
+        $cashierSession = CashierSession::query()
+            ->where('store_id', $data['store_id'])
+            ->where('employee_id', $data['employee_id'])
+            ->where('status', 'open')
+            ->latest('opened_at')
+            ->first();
+
+        if (!$cashierSession) {
+            throw ValidationException::withMessages(['cashier_session' => ['Operator belum membuka kasir untuk toko ini']]);
+        }
+
+        return DB::transaction(function () use ($data, $totals, $cashierSession) {
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
+                'store_id' => $data['store_id'],
                 'table_id' => $data['table_id'] ?? null,
                 'order_type' => $data['order_type'],
                 'customer_name' => $data['customer_name'] ?? null,
                 'employee_id' => $data['employee_id'],
+                'cashier_session_id' => $cashierSession->id,
                 'order_date' => now(),
                 'subtotal' => $totals['subtotal'],
                 'tax' => 0,

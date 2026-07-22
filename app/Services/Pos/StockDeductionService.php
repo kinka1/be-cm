@@ -29,6 +29,7 @@ class StockDeductionService
     private function createTransaction(Order $order, int $productId, float $quantity): void
     {
         StockTransaction::create([
+            'store_id' => $order->store_id,
             'product_id' => $productId,
             'transaction_type' => 'out',
             'quantity' => $quantity,

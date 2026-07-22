@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -21,6 +23,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'employee_id',
+        'current_store_id',
         'name',
         'username',
         'email',
@@ -48,5 +51,20 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function currentStore(): BelongsTo
+    {
+        return $this->belongsTo(Store::class, 'current_store_id');
+    }
+
+    public function accessibleStores(): BelongsToMany
+    {
+        return $this->belongsToMany(Store::class, 'employee_store', 'employee_id', 'store_id', 'employee_id', 'id');
     }
 }

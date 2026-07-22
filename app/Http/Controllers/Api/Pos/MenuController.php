@@ -29,16 +29,22 @@ class MenuController extends Controller
             'message' => 'ok',
             'data' => [
                 'table' => $table,
-                'menu' => $this->menuQuery($request)->paginate($this->perPage($request)),
+                'menu' => $this->menuQuery($request, $table->store_id)->paginate($this->perPage($request)),
             ],
         ]);
     }
 
-    private function menuQuery(Request $request): Builder
+    private function menuQuery(Request $request, ?int $storeId = null): Builder
     {
         $query = Product::query()
             ->where('is_active', true)
             ->orderBy('product_name');
+
+        if ($storeId !== null) {
+            $query->where('store_id', $storeId);
+        } elseif ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
 
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->integer('category_id'));

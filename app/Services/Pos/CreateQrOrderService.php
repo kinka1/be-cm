@@ -21,7 +21,7 @@ class CreateQrOrderService
     public function create(array $data): Order
     {
         $table = CalonMantu::query()->where('qr_code', $data['qr_code'])->firstOrFail();
-        $totals = $this->orderTotalService->calculate($data['items'], (float) ($data['discount'] ?? 0));
+        $totals = $this->orderTotalService->calculate($data['items'], (float) ($data['discount'] ?? 0), 0, $table->store_id);
 
         [$stockOk, $stockMessage] = $this->stockAvailabilityService->validate($totals['details']);
 
@@ -32,6 +32,7 @@ class CreateQrOrderService
         return DB::transaction(function () use ($data, $table, $totals) {
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
+                'store_id' => $table->store_id,
                 'table_id' => $table->id,
                 'order_type' => 'dine_in_qr',
                 'customer_name' => $data['customer_name'] ?? null,

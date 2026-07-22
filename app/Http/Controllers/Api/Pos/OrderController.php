@@ -11,7 +11,11 @@ class OrderController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Order::query()->with(['details.product', 'payment'])->orderByDesc('order_date');
+        $query = Order::query()->with(['store', 'details.product', 'payment'])->orderByDesc('order_date');
+
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
 
         if ($request->filled('order_status')) {
             $query->where('order_status', $request->string('order_status'));
@@ -33,7 +37,7 @@ class OrderController extends Controller
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $order->load(['details.product', 'payment']),
+            'data' => $order->load(['store', 'details.product', 'payment']),
         ]);
     }
 }

@@ -12,6 +12,7 @@ class SupplierController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Supplier::query()->orderBy('supplier_name');
+        if ($request->filled('store_id')) $query->where('store_id', $request->integer('store_id'));
         if ($request->filled('status')) $query->where('status', $request->string('status'));
         if ($request->filled('search')) $query->where('supplier_name', 'like', '%'.$request->string('search').'%');
         return response()->json(['status' => 'sukses', 'message' => 'ok', 'data' => $query->paginate($request->integer('per_page', 15))]);
@@ -19,7 +20,7 @@ class SupplierController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $supplier = Supplier::create($request->validate(['supplier_name' => ['required','string','max:255'], 'contact_name' => ['nullable','string'], 'phone' => ['nullable','string'], 'email' => ['nullable','email'], 'address' => ['nullable','string'], 'status' => ['nullable','in:active,inactive']]));
+        $supplier = Supplier::create($request->validate(['store_id' => ['required','exists:stores,id'], 'supplier_name' => ['required','string','max:255'], 'contact_name' => ['nullable','string'], 'phone' => ['nullable','string'], 'email' => ['nullable','email'], 'address' => ['nullable','string'], 'status' => ['nullable','in:active,inactive']]));
         return response()->json(['status' => 'sukses', 'message' => 'created', 'data' => $supplier], 201);
     }
 
@@ -27,7 +28,7 @@ class SupplierController extends Controller
 
     public function update(Request $request, Supplier $supplier): JsonResponse
     {
-        $supplier->update($request->validate(['supplier_name' => ['required','string','max:255'], 'contact_name' => ['nullable','string'], 'phone' => ['nullable','string'], 'email' => ['nullable','email'], 'address' => ['nullable','string'], 'status' => ['required','in:active,inactive']]));
+        $supplier->update($request->validate(['store_id' => ['required','exists:stores,id'], 'supplier_name' => ['required','string','max:255'], 'contact_name' => ['nullable','string'], 'phone' => ['nullable','string'], 'email' => ['nullable','email'], 'address' => ['nullable','string'], 'status' => ['required','in:active,inactive']]));
         return response()->json(['status' => 'sukses', 'message' => 'updated', 'data' => $supplier]);
     }
 

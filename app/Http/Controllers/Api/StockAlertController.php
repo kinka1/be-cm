@@ -17,17 +17,29 @@ class StockAlertController extends Controller
             $query->where('category_id', $request->integer('category_id'));
         }
 
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
+
         return response()->json(['status' => 'sukses', 'message' => 'ok', 'data' => $query->paginate($request->integer('per_page', 15))]);
     }
 
-    public function summary(): JsonResponse
+    public function summary(Request $request): JsonResponse
     {
+        $lowStockQuery = Product::query()->whereColumn('current_stock', '<', 'minimum_stock');
+        $outOfStockQuery = Product::query()->where('current_stock', '<=', 0);
+
+        if ($request->filled('store_id')) {
+            $lowStockQuery->where('store_id', $request->integer('store_id'));
+            $outOfStockQuery->where('store_id', $request->integer('store_id'));
+        }
+
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
             'data' => [
-                'low_stock_count' => Product::query()->whereColumn('current_stock', '<', 'minimum_stock')->count(),
-                'out_of_stock_count' => Product::query()->where('current_stock', '<=', 0)->count(),
+                'low_stock_count' => $lowStockQuery->count(),
+                'out_of_stock_count' => $outOfStockQuery->count(),
             ],
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -11,6 +12,7 @@ class Product extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'store_id',
         'product_name',
         'sku',
         'category_id',
@@ -22,6 +24,11 @@ class Product extends Model
         'selling_price',
         'is_active',
     ];
+
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
+    }
 
     public function recipes(): HasMany
     {

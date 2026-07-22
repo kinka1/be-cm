@@ -3,13 +3,24 @@
 namespace App\Services\Pos;
 
 use App\Models\Product;
+use Illuminate\Validation\ValidationException;
 
 class OrderTotalService
 {
-    public function calculate(array $items, float $discount = 0, float $paymentFee = 0): array
+    public function calculate(array $items, float $discount = 0, float $paymentFee = 0, ?int $storeId = null): array
     {
         $productIds = collect($items)->pluck('product_id')->unique()->values();
-        $products = Product::query()->whereIn('id', $productIds)->get()->keyBy('id');
+        $productQuery = Product::query()->whereIn('id', $productIds);
+
+        if ($storeId !== null) {
+            $productQuery->where('store_id', $storeId);
+        }
+
+        $products = $productQuery->get()->keyBy('id');
+
+        if ($products->count() !== $productIds->count()) {
+            throw ValidationException::withMessages(['items' => ['Produk tidak ditemukan pada toko yang dipilih']]);
+        }
 
         $details = collect($items)->map(function (array $item) use ($products) {
             $product = $products->get($item['product_id']);

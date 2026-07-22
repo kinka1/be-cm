@@ -10,19 +10,26 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $query = Category::query()->orderBy('id');
+
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->integer('store_id'));
+        }
+
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => Category::query()->orderBy('id')->get(),
+            'data' => $query->get(),
         ]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'category_name' => ['required', 'string', 'max:255', 'unique:categories,category_name'],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
+            'category_name' => ['required', 'string', 'max:255', Rule::unique('categories', 'category_name')->where('store_id', $request->integer('store_id'))],
             'description' => ['nullable', 'string'],
         ]);
 
@@ -47,7 +54,8 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category): JsonResponse
     {
         $validated = $request->validate([
-            'category_name' => ['required', 'string', 'max:255', Rule::unique('categories', 'category_name')->ignore($category->id)],
+            'store_id' => ['required', 'integer', 'exists:stores,id'],
+            'category_name' => ['required', 'string', 'max:255', Rule::unique('categories', 'category_name')->where('store_id', $request->integer('store_id'))->ignore($category->id)],
             'description' => ['nullable', 'string'],
         ]);
 

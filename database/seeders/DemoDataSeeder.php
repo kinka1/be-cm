@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\Recipe;
 use App\Models\Role;
 use App\Models\StockTransaction;
+use App\Models\Store;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -22,9 +23,14 @@ class DemoDataSeeder extends Seeder
     public function run(): void
     {
         $roles = Role::query()->get()->keyBy('role_name');
+        $store = Store::query()->firstOrCreate(
+            ['code' => 'MAIN'],
+            ['store_name' => 'Calon Mantu Utama', 'is_active' => true]
+        );
 
         $admin = $this->employeeWithUser([
             'full_name' => 'Admin Calon Mantu',
+            'store_id' => $store->id,
             'email' => 'admin@calonmantu.test',
             'username' => 'admin',
             'role_id' => $roles->get('admin')->id,
@@ -33,6 +39,7 @@ class DemoDataSeeder extends Seeder
 
         $supervisor = $this->employeeWithUser([
             'full_name' => 'Sari Supervisor',
+            'store_id' => $store->id,
             'email' => 'supervisor@calonmantu.test',
             'username' => 'supervisor',
             'role_id' => $roles->get('supervisor')->id,
@@ -41,19 +48,20 @@ class DemoDataSeeder extends Seeder
 
         $operator = $this->employeeWithUser([
             'full_name' => 'Budi Operator',
+            'store_id' => $store->id,
             'email' => 'operator@calonmantu.test',
             'username' => 'operator',
             'role_id' => $roles->get('operator')->id,
             'join_date' => '2026-03-01',
         ]);
 
-        $this->tables();
+        $this->tables($store->id);
 
-        $categories = $this->categories();
-        $products = $this->products($categories);
+        $categories = $this->categories($store->id);
+        $products = $this->products($categories, $store->id);
         $this->recipes($products);
-        $this->initialStock($products, $supervisor->id);
-        $this->sampleOrder($products, $operator->id);
+        $this->initialStock($products, $supervisor->id, $store->id);
+        $this->sampleOrder($products, $operator->id, $store->id);
         $this->syncCurrentStock();
     }
 
@@ -63,6 +71,7 @@ class DemoDataSeeder extends Seeder
             ['email' => $data['email']],
             [
                 'full_name' => $data['full_name'],
+                'store_id' => $data['store_id'],
                 'join_date' => $data['join_date'],
                 'role_id' => $data['role_id'],
                 'ktp_url' => '/storage/dummy/ktp-'.$data['username'].'.jpg',
@@ -84,13 +93,14 @@ class DemoDataSeeder extends Seeder
         return $employee;
     }
 
-    private function tables(): void
+    private function tables(int $storeId): void
     {
         foreach ([1, 2, 3, 4, 5] as $number) {
             CalonMantu::query()->updateOrCreate(
                 ['qr_code' => 'CM-TABLE-'.$number],
                 [
                     'table_number' => (string) $number,
+                    'store_id' => $storeId,
                     'capacity' => $number <= 2 ? 2 : 4,
                     'status' => 'available',
                     'created_at' => now(),
@@ -99,7 +109,7 @@ class DemoDataSeeder extends Seeder
         }
     }
 
-    private function categories(): array
+    private function categories(int $storeId): array
     {
         $data = [
             'coffee' => ['category_name' => 'Coffee', 'description' => 'Menu minuman berbasis kopi'],
@@ -113,14 +123,14 @@ class DemoDataSeeder extends Seeder
         foreach ($data as $key => $item) {
             $categories[$key] = Category::query()->updateOrCreate(
                 ['category_name' => $item['category_name']],
-                ['description' => $item['description']]
+                ['store_id' => $storeId, 'description' => $item['description']]
             );
         }
 
         return $categories;
     }
 
-    private function products(array $categories): array
+    private function products(array $categories, int $storeId): array
     {
         $data = [
             'beans' => ['Arabica Beans', 'ING-BEANS', 'ingredient', 'gram', 500, 120, 0, false],
@@ -141,6 +151,7 @@ class DemoDataSeeder extends Seeder
                 ['sku' => $sku],
                 [
                     'product_name' => $name,
+                    'store_id' => $storeId,
                     'category_id' => $categories[$category]->id,
                     'description' => 'Dummy data '.$name,
                     'unit_of_measure' => $unit,
@@ -179,7 +190,7 @@ class DemoDataSeeder extends Seeder
         }
     }
 
-    private function initialStock(array $products, int $employeeId): void
+    private function initialStock(array $products, int $employeeId, int $storeId): void
     {
         $stocks = [
             'beans' => 5000,
@@ -194,6 +205,7 @@ class DemoDataSeeder extends Seeder
             StockTransaction::query()->firstOrCreate(
                 [
                     'product_id' => $products[$key]->id,
+                    'store_id' => $storeId,
                     'reference_type' => 'purchase',
                     'reference_id' => 1000 + $products[$key]->id,
                 ],
@@ -209,10 +221,11 @@ class DemoDataSeeder extends Seeder
         }
     }
 
-    private function sampleOrder(array $products, int $employeeId): void
+    private function sampleOrder(array $products, int $employeeId, int $storeId): void
     {
         $orderData = [
             'order_type' => 'takeaway',
+            'store_id' => $storeId,
             'customer_name' => 'Dummy Customer',
             'employee_id' => $employeeId,
             'order_date' => now()->subDay(),
@@ -267,17 +280,18 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        $this->saleStock($products['beans']->id, $order->id, $employeeId, 18);
-        $this->saleStock($products['milk']->id, $order->id, $employeeId, 150);
-        $this->saleStock($products['cup']->id, $order->id, $employeeId, 1);
-        $this->saleStock($products['fries']->id, $order->id, $employeeId, 1);
+        $this->saleStock($products['beans']->id, $order->id, $employeeId, $storeId, 18);
+        $this->saleStock($products['milk']->id, $order->id, $employeeId, $storeId, 150);
+        $this->saleStock($products['cup']->id, $order->id, $employeeId, $storeId, 1);
+        $this->saleStock($products['fries']->id, $order->id, $employeeId, $storeId, 1);
     }
 
-    private function saleStock(int $productId, int $orderId, int $employeeId, float $quantity): void
+    private function saleStock(int $productId, int $orderId, int $employeeId, int $storeId, float $quantity): void
     {
         StockTransaction::query()->firstOrCreate(
             [
                 'product_id' => $productId,
+                'store_id' => $storeId,
                 'reference_type' => 'sale',
                 'reference_id' => $orderId,
             ],

@@ -42,6 +42,7 @@ class StockReportController extends Controller
             ->orderBy('stock_report.product_id');
 
         if ($request->filled('category_id')) $query->where('products.category_id', $request->integer('category_id'));
+        if ($request->filled('store_id')) $query->where('products.store_id', $request->integer('store_id'));
         if ($request->filled('product_id')) $query->where('stock_report.product_id', $request->integer('product_id'));
         if ($request->boolean('low_stock_only')) $query->whereColumn('stock_report.current_stock', '<', 'products.minimum_stock');
         if ($request->filled('search')) {
