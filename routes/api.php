@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssetSummaryController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\Payments\BniQrisDevelopmentController;
+use App\Http\Controllers\Api\Payments\BniQrisWebhookController;
 use App\Http\Controllers\Api\Payments\MidtransWebhookController;
 use App\Http\Controllers\Api\Pos\CashierOrderController;
 use App\Http\Controllers\Api\Pos\CashierSessionController;
@@ -51,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('me/stores', [AuthController::class, 'stores']);
     Route::post('me/current-store', [AuthController::class, 'updateCurrentStore']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::post('dev/bni-qris/create-test', [BniQrisDevelopmentController::class, 'createTest']);
     Route::get('attendances/today', [AttendanceController::class, 'today']);
     Route::get('attendances/summary', [AttendanceController::class, 'summary']);
     Route::post('attendances/clock-in', [AttendanceController::class, 'clockIn']);
@@ -118,3 +121,4 @@ Route::prefix('pos')->group(function () {
 });
 
 Route::post('payments/midtrans/webhook', MidtransWebhookController::class);
+Route::post('payments/bni-qris/webhook', BniQrisWebhookController::class);

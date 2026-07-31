@@ -42,4 +42,23 @@ return [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
     ],
 
+    'qris_gateway' => env('QRIS_GATEWAY', 'midtrans'),
+
+    'bni_qris' => [
+        'base_url' => env('BNI_QRIS_BASE_URL'),
+        'token_path' => env('BNI_QRIS_TOKEN_PATH'),
+        'create_qris_path' => env('BNI_QRIS_CREATE_PATH'),
+        'inquiry_path' => env('BNI_QRIS_INQUIRY_PATH'),
+        'client_id' => env('BNI_QRIS_CLIENT_ID'),
+        'client_secret' => env('BNI_QRIS_CLIENT_SECRET'),
+        'merchant_id' => env('BNI_QRIS_MERCHANT_ID'),
+        'terminal_id' => env('BNI_QRIS_TERMINAL_ID'),
+        'private_key' => env('BNI_QRIS_PRIVATE_KEY'),
+        'public_key' => env('BNI_QRIS_PUBLIC_KEY'),
+        'webhook_secret' => env('BNI_QRIS_WEBHOOK_SECRET'),
+        'signature_mode' => env('BNI_QRIS_SIGNATURE_MODE', 'none'),
+        'timeout' => env('BNI_QRIS_TIMEOUT', 30),
+        'is_production' => env('BNI_QRIS_IS_PRODUCTION', false),
+    ],
+
 ];

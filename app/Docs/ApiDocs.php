@@ -739,4 +739,42 @@ class ApiDocs
     public function midtransWebhook(): void
     {
     }
+
+    #[OA\Post(
+        path: '/api/payments/bni-qris/webhook',
+        summary: 'BNI QRIS payment webhook',
+        tags: ['Payments'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(type: 'object')
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function bniQrisWebhook(): void
+    {
+    }
+
+    #[OA\Post(
+        path: '/api/dev/bni-qris/create-test',
+        summary: 'Create test BNI QRIS transaction',
+        security: [['BearerAuth' => []]],
+        tags: ['Payments'],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['amount'],
+                properties: [
+                    new OA\Property(property: 'order_id', type: 'string', example: 'DEV-BNI-0001'),
+                    new OA\Property(property: 'amount', type: 'number', example: 10000),
+                    new OA\Property(property: 'customer_name', type: 'string', example: 'Customer Test'),
+                    new OA\Property(property: 'description', type: 'string', example: 'Test QRIS BNI'),
+                    new OA\Property(property: 'currency', type: 'string', example: 'IDR'),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function bniQrisCreateTest(): void
+    {
+    }
 }

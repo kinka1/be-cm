@@ -15,6 +15,7 @@ class CreateQrOrderService
         private readonly OrderTotalService $orderTotalService,
         private readonly StockAvailabilityService $stockAvailabilityService,
         private readonly MidtransPaymentService $midtransPaymentService,
+        private readonly BniQrisPaymentService $bniQrisPaymentService,
     ) {
     }
 
@@ -59,15 +60,15 @@ class CreateQrOrderService
                 ]);
             }
 
-            $gateway = $this->midtransPaymentService->createQrisTransaction($order);
+            $gateway = $this->createQrisTransaction($order);
 
             Payment::create([
                 'order_id' => $order->id,
                 'payment_method' => 'qris',
-                'payment_gateway' => 'midtrans',
+                'payment_gateway' => $gateway['payment_gateway'] ?? config('services.qris_gateway', 'midtrans'),
                 'amount_paid' => $order->total_amount,
                 'change_amount' => 0,
-                'qris_transaction_id' => $gateway['gateway_transaction_id'] ?? null,
+                'qris_transaction_id' => $gateway['qris_transaction_id'] ?? $gateway['gateway_transaction_id'] ?? null,
                 'gateway_order_id' => $gateway['gateway_order_id'] ?? $order->order_number,
                 'gateway_transaction_id' => $gateway['gateway_transaction_id'] ?? null,
                 'gateway_response' => $gateway['gateway_response'] ?? null,
@@ -83,5 +84,17 @@ class CreateQrOrderService
     private function generateOrderNumber(): string
     {
         return 'ORD-'.now()->format('YmdHis').'-'.random_int(1000, 9999);
+    }
+
+    private function createQrisTransaction(Order $order): array
+    {
+        if (config('services.qris_gateway') === 'bni') {
+            return $this->bniQrisPaymentService->createQrisTransaction($order);
+        }
+
+        return array_merge(
+            ['payment_gateway' => 'midtrans'],
+            $this->midtransPaymentService->createQrisTransaction($order)
+        );
     }
 }

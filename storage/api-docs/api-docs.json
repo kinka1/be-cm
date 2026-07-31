@@ -4422,6 +4422,84 @@
                     }
                 }
             }
+        },
+        "/api/payments/bni-qris/webhook": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "BNI QRIS payment webhook",
+                "operationId": "4148e7acb5cfee3cc7b8862d0ebead57",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/dev/bni-qris/create-test": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Create test BNI QRIS transaction",
+                "operationId": "19b7a1e8089c1c8a8b5ebd4a66c2b7c5",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "order_id": {
+                                        "type": "string",
+                                        "example": "DEV-BNI-0001"
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 10000
+                                    },
+                                    "customer_name": {
+                                        "type": "string",
+                                        "example": "Customer Test"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Test QRIS BNI"
+                                    },
+                                    "currency": {
+                                        "type": "string",
+                                        "example": "IDR"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
