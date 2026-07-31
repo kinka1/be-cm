@@ -506,28 +506,34 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/pos/payment-methods', summary: 'List manual POS payment methods', security: [['BearerAuth' => []]], tags: ['POS'], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function listPosPaymentMethods(): void
+    {
+    }
+
     #[OA\Post(
         path: '/api/pos/cashier-orders',
-        summary: 'Create cashier order',
+        summary: 'Create cashier order with manual payment',
+        security: [['BearerAuth' => []]],
         tags: ['POS'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_type', 'store_id', 'employee_id', 'payment_method', 'items'], properties: [new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'table_id', type: 'integer'), new OA\Property(property: 'employee_id', type: 'integer'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number'), new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object'))], type: 'object')),
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_type', 'store_id', 'employee_id', 'payment_method', 'items'], properties: [new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'table_id', type: 'integer'), new OA\Property(property: 'employee_id', type: 'integer'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number', description: 'Required for cash. Ignored for qris/transfer; backend records total_amount.'), new OA\Property(property: 'discount', type: 'number'), new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object'))], type: 'object')),
         responses: [new OA\Response(response: 201, description: 'Created')]
     )]
     public function createCashierOrder(): void
     {
     }
 
-    #[OA\Get(path: '/api/pos/orders', summary: 'List POS orders', tags: ['POS'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'order_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'payment_status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/pos/orders', summary: 'List POS orders', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'order_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'payment_status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function listPosOrders(): void
     {
     }
 
-    #[OA\Get(path: '/api/pos/orders/{id}', summary: 'Get POS order', tags: ['POS'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/pos/orders/{id}', summary: 'Get POS order', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function showPosOrder(): void
     {
     }
 
-    #[OA\Patch(path: '/api/pos/orders/{id}/status', summary: 'Update POS order status', tags: ['POS'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_status'], properties: [new OA\Property(property: 'order_status', type: 'string', enum: ['preparing', 'ready', 'completed', 'cancelled'])], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Patch(path: '/api/pos/orders/{id}/status', summary: 'Update POS order status', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_status'], properties: [new OA\Property(property: 'order_status', type: 'string', enum: ['preparing', 'ready', 'completed', 'cancelled'])], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK')])]
     public function updatePosOrderStatus(): void
     {
     }
@@ -710,7 +716,7 @@ class ApiDocs
             new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'from_date', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
             new OA\Parameter(name: 'to_date', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris'])),
+            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris', 'transfer'])),
         ],
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
@@ -725,7 +731,7 @@ class ApiDocs
         parameters: [
             new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
             new OA\Parameter(name: 'date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
-            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris'])),
+            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris', 'transfer'])),
             new OA\Parameter(name: 'include_orders', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
         ],

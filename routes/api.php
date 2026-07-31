@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Pos\CashierSessionController;
 use App\Http\Controllers\Api\Pos\MenuController;
 use App\Http\Controllers\Api\Pos\OrderController;
 use App\Http\Controllers\Api\Pos\OrderStatusController;
+use App\Http\Controllers\Api\Pos\PaymentMethodController;
 use App\Http\Controllers\Api\Pos\QrOrderController;
 use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\RevenueReportController;
@@ -104,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('pos')->group(function () {
     Route::get('tables/{qr_code}/menu', [MenuController::class, 'tableMenu']);
     Route::middleware('auth:sanctum')->group(function () {
+        Route::get('payment-methods', [PaymentMethodController::class, 'index']);
         Route::get('menu', [MenuController::class, 'index']);
         Route::post('cashier-sessions/open', [CashierSessionController::class, 'open']);
         Route::get('cashier-sessions/current', [CashierSessionController::class, 'current']);

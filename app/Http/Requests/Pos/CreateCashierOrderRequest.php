@@ -19,7 +19,7 @@ class CreateCashierOrderRequest extends FormRequest
             'table_id' => ['nullable', 'integer', 'exists:calon_mantu,id'],
             'employee_id' => ['required', 'integer', 'exists:employees,id'],
             'customer_name' => ['nullable', 'string', 'max:255'],
-            'payment_method' => ['required', 'in:cash,qris'],
+            'payment_method' => ['required', 'in:cash,qris,transfer'],
             'amount_paid' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],

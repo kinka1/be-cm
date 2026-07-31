@@ -159,6 +159,7 @@ class CashierSessionController extends Controller
         $orders = $session->orders()->where('payment_status', 'paid');
         $cashSales = (float) (clone $orders)->where('payment_method', 'cash')->sum('total_amount');
         $qrisSales = (float) (clone $orders)->where('payment_method', 'qris')->sum('total_amount');
+        $transferSales = (float) (clone $orders)->where('payment_method', 'transfer')->sum('total_amount');
         $cashIn = (float) $session->cashMovements()->where('type', 'cash_in')->sum('amount');
         $cashOut = (float) $session->cashMovements()->where('type', 'cash_out')->sum('amount');
         $openingCash = (float) $session->opening_cash;
@@ -174,6 +175,7 @@ class CashierSessionController extends Controller
             'opening_cash' => $openingCash,
             'cash_sales' => $cashSales,
             'qris_sales' => $qrisSales,
+            'transfer_sales' => $transferSales,
             'cash_in' => $cashIn,
             'cash_out' => $cashOut,
             'expected_cash' => $expectedCash,

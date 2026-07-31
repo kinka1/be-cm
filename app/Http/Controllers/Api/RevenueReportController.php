@@ -16,7 +16,7 @@ class RevenueReportController extends Controller
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'from_date' => ['required', 'date'],
             'to_date' => ['required', 'date', 'after_or_equal:from_date'],
-            'payment_method' => ['nullable', 'in:cash,qris'],
+            'payment_method' => ['nullable', 'in:cash,qris,transfer'],
         ]);
 
         $query = $this->baseQuery($request)
@@ -33,6 +33,7 @@ class RevenueReportController extends Controller
             ->selectRaw('COALESCE(SUM(total_amount), 0) as revenue')
             ->selectRaw("COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN total_amount ELSE 0 END), 0) as cash_revenue")
             ->selectRaw("COALESCE(SUM(CASE WHEN payment_method = 'qris' THEN total_amount ELSE 0 END), 0) as qris_revenue")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_method = 'transfer' THEN total_amount ELSE 0 END), 0) as transfer_revenue")
             ->groupBy(DB::raw('DATE(order_date)'))
             ->orderBy('date')
             ->get()
@@ -46,6 +47,7 @@ class RevenueReportController extends Controller
                 'revenue' => (float) $row->revenue,
                 'cash_revenue' => (float) $row->cash_revenue,
                 'qris_revenue' => (float) $row->qris_revenue,
+                'transfer_revenue' => (float) $row->transfer_revenue,
             ]);
 
         return response()->json([
@@ -64,6 +66,7 @@ class RevenueReportController extends Controller
                 'total_revenue' => $daily->sum('revenue'),
                 'cash_revenue' => $daily->sum('cash_revenue'),
                 'qris_revenue' => $daily->sum('qris_revenue'),
+                'transfer_revenue' => $daily->sum('transfer_revenue'),
                 'daily_details' => $daily,
             ],
         ]);
@@ -74,7 +77,7 @@ class RevenueReportController extends Controller
         $data = $request->validate([
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'date' => ['nullable', 'date'],
-            'payment_method' => ['nullable', 'in:cash,qris'],
+            'payment_method' => ['nullable', 'in:cash,qris,transfer'],
             'include_orders' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -94,6 +97,7 @@ class RevenueReportController extends Controller
             'total_revenue' => (float) (clone $query)->sum('total_amount'),
             'cash_revenue' => (float) (clone $query)->where('payment_method', 'cash')->sum('total_amount'),
             'qris_revenue' => (float) (clone $query)->where('payment_method', 'qris')->sum('total_amount'),
+            'transfer_revenue' => (float) (clone $query)->where('payment_method', 'transfer')->sum('total_amount'),
         ];
 
         $orders = null;

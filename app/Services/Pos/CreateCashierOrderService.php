@@ -16,8 +16,6 @@ class CreateCashierOrderService
         private readonly OrderTotalService $orderTotalService,
         private readonly StockAvailabilityService $stockAvailabilityService,
         private readonly StockDeductionService $stockDeductionService,
-        private readonly MidtransPaymentService $midtransPaymentService,
-        private readonly BniQrisPaymentService $bniQrisPaymentService,
     ) {
     }
 
@@ -70,8 +68,8 @@ class CreateCashierOrderService
                 'payment_fee' => $totals['payment_fee'],
                 'total_amount' => $totals['total_amount'],
                 'payment_method' => $data['payment_method'],
-                'payment_status' => $data['payment_method'] === 'cash' ? 'paid' : 'pending',
-                'order_status' => $data['payment_method'] === 'cash' ? 'preparing' : 'pending',
+                'payment_status' => 'paid',
+                'order_status' => 'preparing',
             ]);
 
             foreach ($totals['details'] as $detail) {
@@ -86,36 +84,22 @@ class CreateCashierOrderService
                 ]);
             }
 
-            if ($data['payment_method'] === 'cash') {
-                Payment::create([
-                    'order_id' => $order->id,
-                    'payment_method' => 'cash',
-                    'amount_paid' => $data['amount_paid'],
-                    'change_amount' => (float) $data['amount_paid'] - (float) $order->total_amount,
-                    'payment_date' => now(),
-                    'payment_status' => 'success',
-                    'created_at' => now(),
-                ]);
+            $amountPaid = $data['payment_method'] === 'cash'
+                ? (float) $data['amount_paid']
+                : (float) $order->total_amount;
 
-                $this->stockDeductionService->deduct($order);
-            } else {
-                $gateway = $this->createQrisTransaction($order);
+            Payment::create([
+                'order_id' => $order->id,
+                'payment_method' => $data['payment_method'],
+                'amount_paid' => $amountPaid,
+                'change_amount' => $data['payment_method'] === 'cash' ? $amountPaid - (float) $order->total_amount : 0,
+                'payment_fee' => $order->payment_fee,
+                'payment_date' => now(),
+                'payment_status' => 'success',
+                'created_at' => now(),
+            ]);
 
-                Payment::create([
-                    'order_id' => $order->id,
-                    'payment_method' => 'qris',
-                    'payment_gateway' => $gateway['payment_gateway'] ?? config('services.qris_gateway', 'midtrans'),
-                    'amount_paid' => $order->total_amount,
-                    'change_amount' => 0,
-                    'qris_transaction_id' => $gateway['qris_transaction_id'] ?? $gateway['gateway_transaction_id'] ?? null,
-                    'gateway_order_id' => $gateway['gateway_order_id'] ?? $order->order_number,
-                    'gateway_transaction_id' => $gateway['gateway_transaction_id'] ?? null,
-                    'gateway_response' => $gateway['gateway_response'] ?? null,
-                    'payment_fee' => $order->payment_fee,
-                    'payment_status' => 'pending',
-                    'created_at' => now(),
-                ]);
-            }
+            $this->stockDeductionService->deduct($order);
 
             return $order->load(['details.product', 'payment']);
         });
@@ -126,15 +110,4 @@ class CreateCashierOrderService
         return 'ORD-'.now()->format('YmdHis').'-'.random_int(1000, 9999);
     }
 
-    private function createQrisTransaction(Order $order): array
-    {
-        if (config('services.qris_gateway') === 'bni') {
-            return $this->bniQrisPaymentService->createQrisTransaction($order);
-        }
-
-        return array_merge(
-            ['payment_gateway' => 'midtrans'],
-            $this->midtransPaymentService->createQrisTransaction($order)
-        );
-    }
 }

@@ -2780,12 +2780,31 @@
                 ]
             }
         },
+        "/api/pos/payment-methods": {
+            "get": {
+                "tags": [
+                    "POS"
+                ],
+                "summary": "List manual POS payment methods",
+                "operationId": "ca18805aa62e9713f63f5d3a68b8dedc",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/pos/cashier-orders": {
             "post": {
                 "tags": [
                     "POS"
                 ],
-                "summary": "Create cashier order",
+                "summary": "Create cashier order with manual payment",
                 "operationId": "8c7e0ff450a3896e0eb491163827f196",
                 "requestBody": {
                     "required": true,
@@ -2823,10 +2842,12 @@
                                         "type": "string",
                                         "enum": [
                                             "cash",
-                                            "qris"
+                                            "qris",
+                                            "transfer"
                                         ]
                                     },
                                     "amount_paid": {
+                                        "description": "Required for cash. Ignored for qris/transfer; backend records total_amount.",
                                         "type": "number"
                                     },
                                     "discount": {
@@ -2859,7 +2880,12 @@
                     "201": {
                         "description": "Created"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
             }
         },
         "/api/pos/orders": {
@@ -2899,7 +2925,12 @@
                     "200": {
                         "description": "OK"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
             }
         },
         "/api/pos/orders/{id}": {
@@ -2923,7 +2954,12 @@
                     "200": {
                         "description": "OK"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
             }
         },
         "/api/pos/orders/{id}/status": {
@@ -2971,7 +3007,12 @@
                     "200": {
                         "description": "OK"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
             }
         },
         "/api/products/deleted": {
@@ -4336,7 +4377,8 @@
                             "type": "string",
                             "enum": [
                                 "cash",
-                                "qris"
+                                "qris",
+                                "transfer"
                             ]
                         }
                     }
@@ -4381,7 +4423,8 @@
                             "type": "string",
                             "enum": [
                                 "cash",
-                                "qris"
+                                "qris",
+                                "transfer"
                             ]
                         }
                     },
