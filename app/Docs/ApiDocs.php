@@ -511,6 +511,56 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/pos/carts', summary: 'List named POS carts', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'checked_out', 'cancelled']))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function listNamedPosCarts(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/carts', summary: 'Create named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'name'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'name', type: 'string')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created')])]
+    public function createNamedPosCart(): void
+    {
+    }
+
+    #[OA\Get(path: '/api/pos/carts/{cart}', summary: 'Get named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function showNamedPosCart(): void
+    {
+    }
+
+    #[OA\Patch(path: '/api/pos/carts/{cart}', summary: 'Rename named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['name'], properties: [new OA\Property(property: 'name', type: 'string')], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function updateNamedPosCart(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/pos/carts/{cart}', summary: 'Delete named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function deleteNamedPosCart(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/carts/{cart}/items', summary: 'Add item to named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['product_id', 'quantity'], properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created')])]
+    public function addNamedPosCartItem(): void
+    {
+    }
+
+    #[OA\Patch(path: '/api/pos/carts/{cart}/items/{item}', summary: 'Update named POS cart item', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'item', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['quantity'], properties: [new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function updateNamedPosCartItem(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/pos/carts/{cart}/items/{item}', summary: 'Remove named POS cart item', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'item', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function removeNamedPosCartItem(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/pos/carts/{cart}/items', summary: 'Clear named POS cart items', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function clearNamedPosCartItems(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/carts/{cart}/checkout', summary: 'Checkout named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_type', 'payment_method'], properties: [new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'table_id', type: 'integer'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Checked out'), new OA\Response(response: 422, description: 'Empty cart or validation error')])]
+    public function checkoutNamedPosCart(): void
+    {
+    }
+
     #[OA\Get(path: '/api/pos/cart', summary: 'Get current POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function showPosCart(): void
     {

@@ -11,6 +11,8 @@ class PosCart extends Model
     protected $fillable = [
         'user_id',
         'store_id',
+        'name',
+        'status',
     ];
 
     public function user(): BelongsTo

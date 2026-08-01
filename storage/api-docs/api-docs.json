@@ -2799,6 +2799,437 @@
                 ]
             }
         },
+        "/api/pos/carts": {
+            "get": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "List named POS carts",
+                "operationId": "fa2bfb548cb3ce56f8cb429eb58693b8",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "checked_out",
+                                "cancelled"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Create named POS cart",
+                "operationId": "5b3376103b76b492b76b120818c1b0dc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "store_id",
+                                    "name"
+                                ],
+                                "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/carts/{cart}": {
+            "get": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Get named POS cart",
+                "operationId": "5a85759c797e500438f854326d5ada5c",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Delete named POS cart",
+                "operationId": "c1b2c4a9ab43304d27df253653df16e5",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Rename named POS cart",
+                "operationId": "06acb3509c48140822068b9f8169b9ee",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/carts/{cart}/items": {
+            "post": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Add item to named POS cart",
+                "operationId": "64f1188863e0e0150a2b0e29f3e839e0",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "product_id",
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "product_id": {
+                                        "type": "integer"
+                                    },
+                                    "quantity": {
+                                        "type": "number"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Clear named POS cart items",
+                "operationId": "e18a9c2b5f8a689b389be9f65efe8cc0",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/carts/{cart}/items/{item}": {
+            "delete": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Remove named POS cart item",
+                "operationId": "f03b868ac0d863561b1e639b5d9dd5df",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Update named POS cart item",
+                "operationId": "de5d8e73498d5e1b46aa244875822938",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "quantity": {
+                                        "type": "number"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/carts/{cart}/checkout": {
+            "post": {
+                "tags": [
+                    "POS Cart"
+                ],
+                "summary": "Checkout named POS cart",
+                "operationId": "f5238fd4632cefdee1f5f997caa5d3c0",
+                "parameters": [
+                    {
+                        "name": "cart",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_type",
+                                    "payment_method"
+                                ],
+                                "properties": {
+                                    "order_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "dine_in_cashier",
+                                            "takeaway"
+                                        ]
+                                    },
+                                    "table_id": {
+                                        "type": "integer"
+                                    },
+                                    "customer_name": {
+                                        "type": "string"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cash",
+                                            "qris",
+                                            "transfer"
+                                        ]
+                                    },
+                                    "amount_paid": {
+                                        "type": "number"
+                                    },
+                                    "discount": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Checked out"
+                    },
+                    "422": {
+                        "description": "Empty cart or validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/pos/cart": {
             "get": {
                 "tags": [
