@@ -511,6 +511,36 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/pos/cart', summary: 'Get current POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function showPosCart(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/cart/items', summary: 'Add item to POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'product_id', 'quantity'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created')])]
+    public function addPosCartItem(): void
+    {
+    }
+
+    #[OA\Patch(path: '/api/pos/cart/items/{id}', summary: 'Update POS cart item', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['quantity'], properties: [new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function updatePosCartItem(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/pos/cart/items/{id}', summary: 'Remove POS cart item', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function removePosCartItem(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/pos/cart', summary: 'Clear POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function clearPosCart(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/cart/checkout', summary: 'Checkout POS cart into cashier order', security: [['BearerAuth' => []]], tags: ['POS Cart'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'order_type', 'payment_method'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'table_id', type: 'integer'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Checked out'), new OA\Response(response: 422, description: 'Empty cart or validation error')])]
+    public function checkoutPosCart(): void
+    {
+    }
+
     #[OA\Post(
         path: '/api/pos/cashier-orders',
         summary: 'Create cashier order with manual payment',
@@ -738,6 +768,28 @@ class ApiDocs
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
     public function dailyRevenue(): void
+    {
+    }
+
+    #[OA\Get(
+        path: '/api/revenue/sales',
+        summary: 'Get sales report by date range with filters',
+        security: [['BearerAuth' => []]],
+        tags: ['Revenue Reports'],
+        parameters: [
+            new OA\Parameter(name: 'from_date', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'to_date', in: 'query', required: true, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'category_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'product_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'payment_method', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['cash', 'qris', 'transfer'])),
+            new OA\Parameter(name: 'group_by', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['day', 'store', 'category', 'product', 'payment_method'])),
+            new OA\Parameter(name: 'include_orders', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function salesRevenue(): void
     {
     }
 
