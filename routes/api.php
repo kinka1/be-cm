@@ -109,6 +109,16 @@ Route::prefix('pos')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('payment-methods', [PaymentMethodController::class, 'index']);
         Route::get('menu', [MenuController::class, 'index']);
+        Route::get('carts', [CartController::class, 'index']);
+        Route::post('carts', [CartController::class, 'store']);
+        Route::get('carts/{cart}', [CartController::class, 'showCart']);
+        Route::patch('carts/{cart}', [CartController::class, 'updateCart']);
+        Route::delete('carts/{cart}', [CartController::class, 'deleteCart']);
+        Route::post('carts/{cart}/items', [CartController::class, 'addCartItem']);
+        Route::patch('carts/{cart}/items/{item}', [CartController::class, 'updateCartItem']);
+        Route::delete('carts/{cart}/items/{item}', [CartController::class, 'removeCartItem']);
+        Route::delete('carts/{cart}/items', [CartController::class, 'clearCart']);
+        Route::post('carts/{cart}/checkout', [CartController::class, 'checkoutCart']);
         Route::get('cart', [CartController::class, 'show']);
         Route::post('cart/items', [CartController::class, 'addItem']);
         Route::patch('cart/items/{item}', [CartController::class, 'updateItem']);
