@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\Payments\BniQrisDevelopmentController;
 use App\Http\Controllers\Api\Payments\BniQrisWebhookController;
 use App\Http\Controllers\Api\Payments\MidtransWebhookController;
+use App\Http\Controllers\Api\Pos\CartController;
 use App\Http\Controllers\Api\Pos\CashierOrderController;
 use App\Http\Controllers\Api\Pos\CashierSessionController;
 use App\Http\Controllers\Api\Pos\MenuController;
@@ -100,6 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('assets/stock-movement-summary', [AssetSummaryController::class, 'stockMovementSummary']);
     Route::get('revenue/summary', [RevenueReportController::class, 'summary']);
     Route::get('revenue/daily', [RevenueReportController::class, 'daily']);
+    Route::get('revenue/sales', [RevenueReportController::class, 'sales']);
 });
 
 Route::prefix('pos')->group(function () {
@@ -107,6 +109,12 @@ Route::prefix('pos')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('payment-methods', [PaymentMethodController::class, 'index']);
         Route::get('menu', [MenuController::class, 'index']);
+        Route::get('cart', [CartController::class, 'show']);
+        Route::post('cart/items', [CartController::class, 'addItem']);
+        Route::patch('cart/items/{item}', [CartController::class, 'updateItem']);
+        Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
+        Route::delete('cart', [CartController::class, 'clear']);
+        Route::post('cart/checkout', [CartController::class, 'checkout']);
         Route::post('cashier-sessions/open', [CashierSessionController::class, 'open']);
         Route::get('cashier-sessions/current', [CashierSessionController::class, 'current']);
         Route::get('cashier-sessions', [CashierSessionController::class, 'index']);
