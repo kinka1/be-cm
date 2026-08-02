@@ -30,7 +30,7 @@ class JeruChaSeeder extends Seeder
         $operator = $this->employeeWithUser([
             'full_name' => 'Operator JeruCha',
             'store_id' => $store->id,
-            'email' => 'operator@calonmantu.test',
+            'email' => 'jerucha@calonmantu.test',
             'username' => 'jerucha',
             'role_id' => $roles->get('operator')->id,
             'join_date' => '2026-03-01',
