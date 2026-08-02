@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class AttendanceController extends Controller
 {
@@ -112,7 +113,13 @@ class AttendanceController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            $attendance->photo_url = Storage::url($request->file('photo')->store('attendances', 'public'));
+            $photoUrl = $this->storeAttendancePhoto($request);
+
+            if (!$photoUrl) {
+                return response()->json(['status' => 'gagal', 'message' => 'gagal menyimpan foto attendance', 'data' => null], 500);
+            }
+
+            $attendance->photo_url = $photoUrl;
         }
 
         $attendance->save();
@@ -218,12 +225,34 @@ class AttendanceController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            $payload['photo_url'] = Storage::url($request->file('photo')->store('attendances', 'public'));
+            $photoUrl = $this->storeAttendancePhoto($request);
+
+            if (!$photoUrl) {
+                abort(500, 'gagal menyimpan foto attendance');
+            }
+
+            $payload['photo_url'] = $photoUrl;
         } elseif ($attendance && !array_key_exists('photo_url', $payload)) {
             $payload['photo_url'] = $attendance->photo_url;
         }
 
         return $payload;
+    }
+
+    private function storeAttendancePhoto(Request $request): ?string
+    {
+        try {
+            Storage::disk('public')->makeDirectory('attendances');
+            $path = $request->file('photo')->store('attendances', 'public');
+        } catch (Throwable) {
+            return null;
+        }
+
+        if (!$path) {
+            return null;
+        }
+
+        return Storage::url($path);
     }
 
     private function employeeId(Request $request, ?int $fallback = null): ?int

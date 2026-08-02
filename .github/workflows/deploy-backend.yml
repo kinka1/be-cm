@@ -115,12 +115,13 @@ jobs:
                 php artisan down || true
               fi
 
-              echo "5. Menghapus source code lama tanpa menghapus .env"
+              echo "5. Menghapus source code lama tanpa menghapus .env dan storage"
 
               find "$APP_DIR" \
                 -mindepth 1 \
                 -maxdepth 1 \
                 ! -name ".env" \
+                ! -name "storage" \
                 -exec rm -rf {} +
 
               echo "6. Memindahkan source code baru"
@@ -134,6 +135,7 @@ jobs:
               mkdir -p storage/framework/cache
               mkdir -p storage/framework/sessions
               mkdir -p storage/framework/views
+              mkdir -p storage/app/public/attendances
               mkdir -p storage/logs
               mkdir -p bootstrap/cache
 
@@ -144,6 +146,7 @@ jobs:
               echo "9. Membersihkan cache lama"
 
               php artisan optimize:clear
+              php artisan storage:link || true
 
               echo "10. Menjalankan migration"
 
