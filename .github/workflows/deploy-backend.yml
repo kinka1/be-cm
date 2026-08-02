@@ -34,6 +34,8 @@ jobs:
 
       - name: Install production dependencies
         run: |
+          set -euo pipefail
+
           composer install \
             --no-dev \
             --prefer-dist \
@@ -66,25 +68,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "$SSH_PRIVATE_KEY" ]; then
-            echo "ERROR: VPS_SSH_KEY kosong."
-            exit 1
-          fi
-
-          if [ -z "$VPS_HOST" ]; then
-            echo "ERROR: VPS_HOST kosong."
-            exit 1
-          fi
-
-          if [ -z "$VPS_USER" ]; then
-            echo "ERROR: VPS_USER kosong."
-            exit 1
-          fi
-
-          if [ -z "$VPS_PORT" ]; then
-            echo "ERROR: VPS_PORT kosong."
-            exit 1
-          fi
+          : "${SSH_PRIVATE_KEY:?VPS_SSH_KEY kosong}"
+          : "${VPS_HOST:?VPS_HOST kosong}"
+          : "${VPS_USER:?VPS_USER kosong}"
+          : "${VPS_PORT:?VPS_PORT kosong}"
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -139,6 +126,8 @@ jobs:
           VPS_PORT: ${{ secrets.VPS_PORT }}
           RELEASE_ID: ${{ github.run_number }}-${{ github.sha }}
         run: |
+          set -euo pipefail
+
           ssh \
             -i ~/.ssh/deploy_key \
             -p "$VPS_PORT" \
@@ -152,49 +141,64 @@ jobs:
               BASE_DIR="/var/www/calon-mantoe.cloud/backend"
               RELEASES_DIR="$BASE_DIR/releases"
               SHARED_DIR="$BASE_DIR/shared"
+              SHARED_STORAGE="$SHARED_DIR/storage"
               CURRENT_LINK="$BASE_DIR/current"
 
               ARCHIVE="/home/deploy/releases/backend/backend.tar.gz"
 
-              # Ambil bagian awal commit SHA agar nama folder tidak terlalu panjang.
-              RELEASE_SHORT="$(echo "$RELEASE_ID" | cut -c1-24)"
+              RELEASE_SHORT="$(printf '%s' "$RELEASE_ID" | cut -c1-24)"
               RELEASE_DIR="$RELEASES_DIR/$RELEASE_SHORT"
 
-              restore_current_app() {
-                if [ -L "$CURRENT_LINK" ] && [ -f "$CURRENT_LINK/artisan" ]; then
-                  cd "$CURRENT_LINK"
-                  php artisan up || true
-                fi
-              }
+              PREVIOUS_RELEASE=""
+              SWITCH_COMPLETED=false
 
-              trap restore_current_app EXIT
-
-              echo "1. Memeriksa file deployment"
-              test -s "$ARCHIVE"
-
-              echo "2. Memeriksa file .env production"
-              if [ ! -f "$SHARED_DIR/.env" ]; then
-                echo "ERROR: $SHARED_DIR/.env tidak ditemukan."
-                exit 1
+              if [ -L "$CURRENT_LINK" ]; then
+                PREVIOUS_RELEASE="$(readlink -f "$CURRENT_LINK")"
               fi
 
-              echo "3. Membuat folder release baru"
-              mkdir -p "$RELEASES_DIR"
-              rm -rf "$RELEASE_DIR"
-              mkdir -p "$RELEASE_DIR"
+              rollback_deployment() {
+                EXIT_CODE=$?
 
-              echo "4. Mengekstrak aplikasi"
-              tar -xzf "$ARCHIVE" -C "$RELEASE_DIR"
+                if [ "$EXIT_CODE" -ne 0 ]; then
+                  echo "Deployment gagal dengan exit code $EXIT_CODE."
 
-              cd "$RELEASE_DIR"
+                  if [ "$SWITCH_COMPLETED" = true ] \
+                    && [ -n "$PREVIOUS_RELEASE" ] \
+                    && [ -d "$PREVIOUS_RELEASE" ]; then
 
-              echo "5. Menghubungkan .env production"
-              rm -f .env
-              ln -s "$SHARED_DIR/.env" .env
+                    echo "Mengembalikan current ke release sebelumnya..."
 
-              echo "6. Menghubungkan shared storage"
+                    ROLLBACK_LINK="$BASE_DIR/current-rollback"
 
-              SHARED_STORAGE="$SHARED_DIR/storage"
+                    rm -f "$ROLLBACK_LINK"
+                    ln -s "$PREVIOUS_RELEASE" "$ROLLBACK_LINK"
+                    mv -Tf "$ROLLBACK_LINK" "$CURRENT_LINK"
+
+                    sudo -n systemctl reload php8.3-fpm || true
+
+                    echo "Rollback berhasil:"
+                    echo "$PREVIOUS_RELEASE"
+                  fi
+
+                  # Jangan menghapus release jika ternyata masih menjadi current.
+                  if [ "$(readlink -f "$CURRENT_LINK" 2>/dev/null || true)" \
+                    != "$RELEASE_DIR" ]; then
+                    rm -rf "$RELEASE_DIR"
+                  fi
+                fi
+
+                exit "$EXIT_CODE"
+              }
+
+              trap rollback_deployment EXIT
+
+              echo "1. Memeriksa archive deployment"
+              test -s "$ARCHIVE"
+
+              echo "2. Memeriksa shared .env"
+              test -f "$SHARED_DIR/.env"
+
+              echo "3. Menyiapkan shared storage"
 
               mkdir -p "$SHARED_STORAGE/app/public"
               mkdir -p "$SHARED_STORAGE/app/public/attendances"
@@ -203,49 +207,80 @@ jobs:
               mkdir -p "$SHARED_STORAGE/framework/testing"
               mkdir -p "$SHARED_STORAGE/framework/views"
               mkdir -p "$SHARED_STORAGE/logs"
-              mkdir -p bootstrap/cache
+
+              test -w "$SHARED_STORAGE" || {
+                echo "ERROR: Shared storage tidak writable oleh user deploy."
+                exit 1
+              }
+
+              echo "4. Membuat folder release baru"
+
+              mkdir -p "$RELEASES_DIR"
+              rm -rf "$RELEASE_DIR"
+              mkdir -p "$RELEASE_DIR"
+
+              echo "5. Mengekstrak source code"
+
+              tar -xzf "$ARCHIVE" -C "$RELEASE_DIR"
+
+              cd "$RELEASE_DIR"
+
+              test -f artisan
+              test -f composer.json
+              test -d vendor
+              test -f public/index.php
+
+              echo "6. Menghubungkan .env"
+
+              rm -f .env
+              ln -s "$SHARED_DIR/.env" .env
+
+              echo "7. Menghubungkan shared storage"
 
               rm -rf storage
               ln -s "$SHARED_STORAGE" storage
 
-              echo "7. Mengatur permission Laravel"
+              echo "8. Menyiapkan bootstrap/cache"
 
-              chgrp -R www-data "$SHARED_STORAGE" bootstrap/cache
+              mkdir -p bootstrap/cache
+              chgrp www-data bootstrap/cache
+              chmod 2775 bootstrap/cache
 
-              find "$SHARED_STORAGE" bootstrap/cache \
-                -type d \
-                -exec chmod 2775 {} \;
+              echo "9. Membuat public storage link"
 
-              find "$SHARED_STORAGE" bootstrap/cache \
-                -type f \
-                -exec chmod 664 {} \;
+              rm -rf public/storage
 
-              echo "8. Membersihkan cache Laravel"
+              # Langsung mengarah ke shared upload agar tidak bergantung
+              # pada path release tertentu.
+              ln -s "$SHARED_STORAGE/app/public" public/storage
+
+              echo "10. Membersihkan cache release baru"
+
               php artisan optimize:clear
 
-              echo "9. Membuat storage link"
-              rm -rf public/storage
-              php artisan storage:link
+              echo "11. Memeriksa konfigurasi Laravel"
 
-              echo "10. Menjalankan migration"
+              php artisan about
+
+              echo "12. Menjalankan migration"
+
               php artisan migrate --force
 
-              echo "11. Membuat cache production"
+              echo "13. Membuat cache production"
+
               php artisan config:cache
+
+              # route:cache dapat gagal jika ada route closure.
               php artisan route:cache
+
               php artisan view:cache
 
-              echo "12. Memastikan Laravel dapat dijalankan"
+              echo "14. Memastikan cache berhasil dibuat"
+
+              test -f bootstrap/cache/config.php
               php artisan about > /dev/null
 
-              echo "13. Menyimpan release sebelumnya untuk rollback"
-              PREVIOUS_RELEASE=""
-
-              if [ -L "$CURRENT_LINK" ]; then
-                PREVIOUS_RELEASE="$(readlink -f "$CURRENT_LINK")"
-              fi
-
-              echo "14. Mengaktifkan release baru secara atomik"
+              echo "15. Mengaktifkan release baru secara atomik"
 
               NEXT_LINK="$BASE_DIR/current-next"
 
@@ -253,21 +288,41 @@ jobs:
               ln -s "$RELEASE_DIR" "$NEXT_LINK"
               mv -Tf "$NEXT_LINK" "$CURRENT_LINK"
 
-              echo "15. Menghidupkan aplikasi"
-              php artisan up
+              SWITCH_COMPLETED=true
 
-              echo "16. Reload PHP-FPM jika tersedia"
-              sudo -n systemctl reload php8.3-fpm || true
+              echo "16. Reload PHP-FPM"
 
-              echo "17. Health check production"
-              curl --fail --silent --show-error --max-time 20 https://api.calon-mantoe.cloud/api/health > /dev/null
+              sudo -n systemctl reload php8.3-fpm
+
+              echo "17. Restart queue worker"
+
+              cd "$CURRENT_LINK"
+              php artisan queue:restart || true
+
+              echo "18. Menjalankan health check"
+
+              curl \
+                --fail \
+                --silent \
+                --show-error \
+                --max-time 20 \
+                --retry 3 \
+                --retry-delay 2 \
+                --resolve api.calon-mantoe.cloud:443:127.0.0.1 \
+                https://api.calon-mantoe.cloud/api/health \
+                > /dev/null
+
+              echo "Health check berhasil."
 
               trap - EXIT
 
-              echo "18. Membersihkan archive"
+              echo "19. Menghapus archive"
+
               rm -f "$ARCHIVE"
 
-              echo "19. Menyimpan maksimal 5 release terakhir"
+              echo "20. Menyimpan maksimal 5 release terakhir"
+
+              CURRENT_RELEASE="$(readlink -f "$CURRENT_LINK")"
 
               mapfile -t OLD_RELEASES < <(
                 find "$RELEASES_DIR" \
@@ -281,12 +336,11 @@ jobs:
               )
 
               for OLD_RELEASE in "${OLD_RELEASES[@]}"; do
-                # Jangan hapus release yang masih aktif.
-                if [ "$OLD_RELEASE" != "$(readlink -f "$CURRENT_LINK")" ]; then
+                if [ "$OLD_RELEASE" != "$CURRENT_RELEASE" ]; then
                   rm -rf "$OLD_RELEASE"
                 fi
               done
 
               echo "Deployment Laravel berhasil."
-              echo "Current release: $(readlink -f "$CURRENT_LINK")"
+              echo "Current release: $CURRENT_RELEASE"
           EOF
