@@ -43,129 +43,232 @@ jobs:
 
       - name: Create deployment archive
         run: |
+          set -euo pipefail
+
           tar \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='.env' \
+            --exclude='storage' \
             --exclude='node_modules' \
             --exclude='tests' \
             -czf "$RUNNER_TEMP/backend.tar.gz" .
 
-      - name: Prepare SSH
+          test -s "$RUNNER_TEMP/backend.tar.gz"
+          ls -lh "$RUNNER_TEMP/backend.tar.gz"
+
+      - name: Prepare and test SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "$VPS_PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          set -euo pipefail
 
-      - name: Upload backend archive
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "ERROR: VPS_SSH_KEY kosong."
+            exit 1
+          fi
+
+          if [ -z "$VPS_HOST" ]; then
+            echo "ERROR: VPS_HOST kosong."
+            exit 1
+          fi
+
+          if [ -z "$VPS_USER" ]; then
+            echo "ERROR: VPS_USER kosong."
+            exit 1
+          fi
+
+          if [ -z "$VPS_PORT" ]; then
+            echo "ERROR: VPS_PORT kosong."
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" \
+            | tr -d '\r' \
+            > ~/.ssh/deploy_key
+
+          chmod 600 ~/.ssh/deploy_key
+
+          # Memastikan private key valid.
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+
+          ssh-keyscan \
+            -T 15 \
+            -p "$VPS_PORT" \
+            -H "$VPS_HOST" \
+            >> ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/known_hosts
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p "$VPS_PORT" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "echo 'Koneksi SSH berhasil.'"
+
+      - name: Upload deployment archive
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
         run: |
+          set -euo pipefail
+
           scp \
             -i ~/.ssh/deploy_key \
             -P "$VPS_PORT" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o StrictHostKeyChecking=yes \
             "$RUNNER_TEMP/backend.tar.gz" \
             "$VPS_USER@$VPS_HOST:/home/deploy/releases/backend/backend.tar.gz"
 
-      - name: Activate Laravel deployment
+      - name: Activate atomic deployment
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
+          RELEASE_ID: ${{ github.run_number }}-${{ github.sha }}
         run: |
           ssh \
             -i ~/.ssh/deploy_key \
             -p "$VPS_PORT" \
-            "$VPS_USER@$VPS_HOST" << 'EOF'
-              set -e
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "RELEASE_ID='$RELEASE_ID' bash -s" << 'EOF'
+              set -euo pipefail
+
+              BASE_DIR="/var/www/calon-mantoe.cloud/backend"
+              RELEASES_DIR="$BASE_DIR/releases"
+              SHARED_DIR="$BASE_DIR/shared"
+              CURRENT_LINK="$BASE_DIR/current"
 
               ARCHIVE="/home/deploy/releases/backend/backend.tar.gz"
-              TEMP_DIR="/home/deploy/releases/backend/current"
-              APP_DIR="/var/www/calon-mantoe.cloud/backend"
 
-              echo "1. Menyiapkan folder sementara"
+              # Ambil bagian awal commit SHA agar nama folder tidak terlalu panjang.
+              RELEASE_SHORT="$(echo "$RELEASE_ID" | cut -c1-24)"
+              RELEASE_DIR="$RELEASES_DIR/$RELEASE_SHORT"
 
-              rm -rf "$TEMP_DIR"
-              mkdir -p "$TEMP_DIR"
+              echo "1. Memeriksa file deployment"
+              test -s "$ARCHIVE"
 
-              echo "2. Mengekstrak source code"
-
-              tar -xzf "$ARCHIVE" -C "$TEMP_DIR"
-
-              echo "3. Memastikan file .env production tersedia"
-
-              if [ ! -f "$APP_DIR/.env" ]; then
-                echo "ERROR: File $APP_DIR/.env tidak ditemukan"
+              echo "2. Memeriksa file .env production"
+              if [ ! -f "$SHARED_DIR/.env" ]; then
+                echo "ERROR: $SHARED_DIR/.env tidak ditemukan."
                 exit 1
               fi
 
-              cp "$APP_DIR/.env" "$TEMP_DIR/.env"
+              echo "3. Membuat folder release baru"
+              mkdir -p "$RELEASES_DIR"
+              rm -rf "$RELEASE_DIR"
+              mkdir -p "$RELEASE_DIR"
 
-              echo "4. Mengaktifkan maintenance mode jika aplikasi lama tersedia"
+              echo "4. Mengekstrak aplikasi"
+              tar -xzf "$ARCHIVE" -C "$RELEASE_DIR"
 
-              if [ -f "$APP_DIR/artisan" ]; then
-                cd "$APP_DIR"
-                php artisan down || true
-              fi
+              cd "$RELEASE_DIR"
 
-              echo "5. Menghapus source code lama tanpa menghapus .env dan storage"
+              echo "5. Menghubungkan .env production"
+              rm -f .env
+              ln -s "$SHARED_DIR/.env" .env
 
-              find "$APP_DIR" \
-                -mindepth 1 \
-                -maxdepth 1 \
-                ! -name ".env" \
-                ! -name "storage" \
-                -exec rm -rf {} +
+              echo "6. Menghubungkan shared storage"
 
-              echo "6. Memindahkan source code baru"
+              SHARED_STORAGE="$SHARED_DIR/storage"
 
-              cp -a "$TEMP_DIR"/. "$APP_DIR"/
-
-              cd "$APP_DIR"
-
-              echo "7. Menyiapkan folder Laravel"
-
-              mkdir -p storage/framework/cache
-              mkdir -p storage/framework/sessions
-              mkdir -p storage/framework/views
-              mkdir -p storage/app/public/attendances
-              mkdir -p storage/logs
+              mkdir -p "$SHARED_STORAGE/app/public"
+              mkdir -p "$SHARED_STORAGE/framework/cache/data"
+              mkdir -p "$SHARED_STORAGE/framework/sessions"
+              mkdir -p "$SHARED_STORAGE/framework/testing"
+              mkdir -p "$SHARED_STORAGE/framework/views"
+              mkdir -p "$SHARED_STORAGE/logs"
               mkdir -p bootstrap/cache
 
-              echo "8. Mengatur permission Laravel"
+              rm -rf storage
+              ln -s "$SHARED_STORAGE" storage
 
-              chmod -R ug+rwX storage bootstrap/cache
+              echo "7. Mengatur permission Laravel"
 
-              echo "9. Membersihkan cache lama"
+              chgrp -R www-data "$SHARED_STORAGE" bootstrap/cache
 
+              find "$SHARED_STORAGE" bootstrap/cache \
+                -type d \
+                -exec chmod 2775 {} \;
+
+              find "$SHARED_STORAGE" bootstrap/cache \
+                -type f \
+                -exec chmod 664 {} \;
+
+              echo "8. Membersihkan cache Laravel"
               php artisan optimize:clear
-              php artisan storage:link || true
+
+              echo "9. Membuat storage link"
+              rm -rf public/storage
+              php artisan storage:link
 
               echo "10. Menjalankan migration"
-
               php artisan migrate --force
 
               echo "11. Membuat cache production"
-
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
 
-              echo "12. Menghidupkan aplikasi"
+              echo "12. Memastikan Laravel dapat dijalankan"
+              php artisan about > /dev/null
 
+              echo "13. Menyimpan release sebelumnya untuk rollback"
+              PREVIOUS_RELEASE=""
+
+              if [ -L "$CURRENT_LINK" ]; then
+                PREVIOUS_RELEASE="$(readlink -f "$CURRENT_LINK")"
+              fi
+
+              echo "14. Mengaktifkan release baru secara atomik"
+
+              NEXT_LINK="$BASE_DIR/current-next"
+
+              rm -f "$NEXT_LINK"
+              ln -s "$RELEASE_DIR" "$NEXT_LINK"
+              mv -Tf "$NEXT_LINK" "$CURRENT_LINK"
+
+              echo "15. Menghidupkan aplikasi"
               php artisan up || true
 
-              echo "13. Membersihkan file deployment"
-
-              rm -rf "$TEMP_DIR"
+              echo "16. Membersihkan archive"
               rm -f "$ARCHIVE"
 
+              echo "17. Menyimpan maksimal 5 release terakhir"
+
+              mapfile -t OLD_RELEASES < <(
+                find "$RELEASES_DIR" \
+                  -mindepth 1 \
+                  -maxdepth 1 \
+                  -type d \
+                  -printf '%T@ %p\n' \
+                  | sort -nr \
+                  | tail -n +6 \
+                  | cut -d' ' -f2-
+              )
+
+              for OLD_RELEASE in "${OLD_RELEASES[@]}"; do
+                # Jangan hapus release yang masih aktif.
+                if [ "$OLD_RELEASE" != "$(readlink -f "$CURRENT_LINK")" ]; then
+                  rm -rf "$OLD_RELEASE"
+                fi
+              done
+
               echo "Deployment Laravel berhasil."
+              echo "Current release: $(readlink -f "$CURRENT_LINK")"
           EOF
