@@ -160,6 +160,15 @@ jobs:
               RELEASE_SHORT="$(echo "$RELEASE_ID" | cut -c1-24)"
               RELEASE_DIR="$RELEASES_DIR/$RELEASE_SHORT"
 
+              restore_current_app() {
+                if [ -L "$CURRENT_LINK" ] && [ -f "$CURRENT_LINK/artisan" ]; then
+                  cd "$CURRENT_LINK"
+                  php artisan up || true
+                fi
+              }
+
+              trap restore_current_app EXIT
+
               echo "1. Memeriksa file deployment"
               test -s "$ARCHIVE"
 
@@ -188,6 +197,7 @@ jobs:
               SHARED_STORAGE="$SHARED_DIR/storage"
 
               mkdir -p "$SHARED_STORAGE/app/public"
+              mkdir -p "$SHARED_STORAGE/app/public/attendances"
               mkdir -p "$SHARED_STORAGE/framework/cache/data"
               mkdir -p "$SHARED_STORAGE/framework/sessions"
               mkdir -p "$SHARED_STORAGE/framework/testing"
@@ -244,12 +254,20 @@ jobs:
               mv -Tf "$NEXT_LINK" "$CURRENT_LINK"
 
               echo "15. Menghidupkan aplikasi"
-              php artisan up || true
+              php artisan up
 
-              echo "16. Membersihkan archive"
+              echo "16. Reload PHP-FPM jika tersedia"
+              sudo -n systemctl reload php8.3-fpm || true
+
+              echo "17. Health check production"
+              curl --fail --silent --show-error --max-time 20 https://api.calon-mantoe.cloud/api/health > /dev/null
+
+              trap - EXIT
+
+              echo "18. Membersihkan archive"
               rm -f "$ARCHIVE"
 
-              echo "17. Menyimpan maksimal 5 release terakhir"
+              echo "19. Menyimpan maksimal 5 release terakhir"
 
               mapfile -t OLD_RELEASES < <(
                 find "$RELEASES_DIR" \

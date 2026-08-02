@@ -96,35 +96,45 @@ class AttendanceController extends Controller
             return response()->json(['status' => 'gagal', 'message' => 'tidak memiliki akses ke employee ini', 'data' => null], 403);
         }
 
-        $employee = Employee::findOrFail($employeeId);
+        try {
+            $employee = Employee::findOrFail($employeeId);
 
-        $attendance = Attendance::query()->firstOrNew(['employee_id' => $employeeId, 'date' => today()->toDateString()]);
+            $attendance = Attendance::query()->firstOrNew(['employee_id' => $employeeId, 'date' => today()->toDateString()]);
 
-        if ($attendance->exists && $attendance->clock_in !== null) {
-            return response()->json(['status' => 'gagal', 'message' => 'sudah clock in hari ini', 'data' => $attendance], 422);
-        }
-
-        $attendance->fill([
-            'store_id' => $employee->store_id,
-            'clock_in' => now()->format('H:i:s'),
-            'status' => 'hadir',
-            'location_coordinates' => $data['location_coordinates'] ?? null,
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        if ($request->hasFile('photo')) {
-            $photoUrl = $this->storeAttendancePhoto($request);
-
-            if (!$photoUrl) {
-                return response()->json(['status' => 'gagal', 'message' => 'gagal menyimpan foto attendance', 'data' => null], 500);
+            if ($attendance->exists && $attendance->clock_in !== null) {
+                return response()->json(['status' => 'gagal', 'message' => 'sudah clock in hari ini', 'data' => $attendance], 422);
             }
 
-            $attendance->photo_url = $photoUrl;
+            $attendance->fill([
+                'store_id' => $employee->store_id,
+                'clock_in' => now()->format('H:i:s'),
+                'status' => 'hadir',
+                'location_coordinates' => $data['location_coordinates'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            if ($request->hasFile('photo')) {
+                $photoUrl = $this->storeAttendancePhoto($request);
+
+                if (!$photoUrl) {
+                    return response()->json(['status' => 'gagal', 'message' => 'gagal menyimpan foto attendance', 'data' => null], 500);
+                }
+
+                $attendance->photo_url = $photoUrl;
+            }
+
+            $attendance->save();
+
+            return response()->json(['status' => 'sukses', 'message' => 'clock in berhasil', 'data' => $attendance->load(['employee', 'store'])], 201);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return response()->json([
+                'status' => 'gagal',
+                'message' => 'gagal clock in attendance',
+                'data' => config('app.debug') ? ['error' => $exception->getMessage()] : null,
+            ], 500);
         }
-
-        $attendance->save();
-
-        return response()->json(['status' => 'sukses', 'message' => 'clock in berhasil', 'data' => $attendance->load(['employee', 'store'])], 201);
     }
 
     public function clockOut(Request $request): JsonResponse
