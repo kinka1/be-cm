@@ -3,9 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Employee;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\Store;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class JeruChaSeeder extends Seeder
 {
@@ -20,6 +24,17 @@ class JeruChaSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        $roles = Role::query()->get()->keyBy('role_name');
+
+        $operator = $this->employeeWithUser([
+            'full_name' => 'Operator JeruCha',
+            'store_id' => $store->id,
+            'email' => 'operator@calonmantu.test',
+            'username' => 'jerucha',
+            'role_id' => $roles->get('operator')->id,
+            'join_date' => '2026-03-01',
+        ]);
 
         $categories = collect($this->menus())
             ->keys()
@@ -54,6 +69,34 @@ class JeruChaSeeder extends Seeder
                 );
             }
         }
+    }
+
+    private function employeeWithUser(array $data): Employee
+    {
+        $employee = Employee::query()->updateOrCreate(
+            ['email' => $data['email']],
+            [
+                'full_name' => $data['full_name'],
+                'store_id' => $data['store_id'],
+                'join_date' => $data['join_date'],
+                'role_id' => $data['role_id'],
+                'ktp_url' => '/storage/dummy/ktp-' . $data['username'] . '.jpg',
+                'kk_url' => '/storage/dummy/kk-' . $data['username'] . '.jpg',
+                'status' => 'active',
+            ]
+        );
+
+        User::query()->updateOrCreate(
+            ['username' => $data['username']],
+            [
+                'employee_id' => $employee->id,
+                'name' => $data['full_name'],
+                'email' => $data['email'],
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        return $employee;
     }
 
     private function menus(): array
