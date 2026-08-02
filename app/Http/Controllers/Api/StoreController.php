@@ -14,10 +14,6 @@ class StoreController extends Controller
     {
         $query = Store::query()->orderBy('store_name');
 
-        if ($request->user()?->employee_id) {
-            $query->whereIn('id', $request->user()->accessibleStores()->pluck('stores.id'));
-        }
-
         if ($request->filled('is_active')) {
             $query->where('is_active', filter_var($request->string('is_active'), FILTER_VALIDATE_BOOLEAN));
         }
