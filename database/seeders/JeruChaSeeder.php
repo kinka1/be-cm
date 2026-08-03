@@ -25,13 +25,32 @@ class JeruChaSeeder extends Seeder
             ]
         );
 
-        $roles = Role::query()->get()->keyBy('role_name');
+        $roles = collect(['operator', 'supervisor', 'admin'])
+            ->mapWithKeys(function (string $roleName): array {
+                $role = Role::query()->updateOrCreate(
+                    ['role_name' => $roleName],
+                    ['permissions' => []]
+                );
 
-        $operator = $this->employeeWithUser([
+                return [$roleName => $role];
+            });
+
+        $this->employeeWithUser([
+            'full_name' => 'Admin JeruCha',
+            'store_id' => $store->id,
+            'email' => 'admin.jerucha@calonmantu.test',
+            'username' => 'admin_jerucha',
+            'password' => '12345678',
+            'role_id' => $roles->get('admin')->id,
+            'join_date' => '2026-03-01',
+        ]);
+
+        $this->employeeWithUser([
             'full_name' => 'Operator JeruCha',
             'store_id' => $store->id,
-            'email' => 'jerucha@calonmantu.test',
+            'email' => 'operator.jerucha@calonmantu.test',
             'username' => 'jerucha',
+            'password' => '12345678',
             'role_id' => $roles->get('operator')->id,
             'join_date' => '2026-03-01',
         ]);
@@ -90,11 +109,14 @@ class JeruChaSeeder extends Seeder
             ['username' => $data['username']],
             [
                 'employee_id' => $employee->id,
+                'current_store_id' => $data['store_id'],
                 'name' => $data['full_name'],
                 'email' => $data['email'],
-                'password' => Hash::make('password'),
+                'password' => Hash::make($data['password']),
             ]
         );
+
+        $employee->stores()->syncWithoutDetaching([$data['store_id']]);
 
         return $employee;
     }
