@@ -151,14 +151,15 @@ class ApiDocs
 
     #[OA\Post(
         path: '/api/employees',
-        summary: 'Create employee',
+        summary: 'Create employee or update existing employee for admin',
+        description: 'If authenticated user role is admin and the submitted email or username already belongs to an employee, this endpoint updates that employee instead of failing with duplicate validation. Password, ktp, and kk are required only when creating a new employee.',
         tags: ['Employees'],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\MediaType(
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
-                    required: ['full_name', 'store_id', 'email', 'join_date', 'role_id', 'username', 'password', 'password_confirmation', 'ktp', 'kk'],
+                    required: ['full_name', 'store_id', 'email', 'join_date', 'role_id', 'username'],
                     properties: [
                         new OA\Property(property: 'full_name', type: 'string'),
                         new OA\Property(property: 'store_id', type: 'integer'),
@@ -170,12 +171,13 @@ class ApiDocs
                         new OA\Property(property: 'password_confirmation', type: 'string', format: 'password'),
                         new OA\Property(property: 'ktp', type: 'string', format: 'binary'),
                         new OA\Property(property: 'kk', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'status', type: 'string', enum: ['active', 'inactive']),
                     ],
                     type: 'object'
                 )
             )
         ),
-        responses: [new OA\Response(response: 201, description: 'Created')]
+        responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 200, description: 'Updated')]
     )]
     public function createEmployee(): void
     {

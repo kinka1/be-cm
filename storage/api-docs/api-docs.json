@@ -589,7 +589,8 @@
                 "tags": [
                     "Employees"
                 ],
-                "summary": "Create employee",
+                "summary": "Create employee or update existing employee for admin",
+                "description": "If authenticated user role is admin and the submitted email or username already belongs to an employee, this endpoint updates that employee instead of failing with duplicate validation. Password, ktp, and kk are required only when creating a new employee.",
                 "operationId": "bbc5f3a042353e7ea0260dd6d27c4345",
                 "requestBody": {
                     "required": true,
@@ -602,11 +603,7 @@
                                     "email",
                                     "join_date",
                                     "role_id",
-                                    "username",
-                                    "password",
-                                    "password_confirmation",
-                                    "ktp",
-                                    "kk"
+                                    "username"
                                 ],
                                 "properties": {
                                     "full_name": {
@@ -644,6 +641,13 @@
                                     "kk": {
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
                                     }
                                 },
                                 "type": "object"
@@ -654,6 +658,9 @@
                 "responses": {
                     "201": {
                         "description": "Created"
+                    },
+                    "200": {
+                        "description": "Updated"
                     }
                 }
             }

@@ -47,52 +47,76 @@ class EmployeeController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $existingEmployee = $this->existingEmployeeForUpsert($request);
+
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'store_id' => ['required', 'integer', 'exists:stores,id'],
-            'email' => ['required', 'email', 'max:255', 'unique:employees,email', 'unique:users,email'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('employees', 'email')->ignore($existingEmployee?->id),
+                Rule::unique('users', 'email')->ignore($existingEmployee?->id, 'employee_id'),
+            ],
             'join_date' => ['required', 'date'],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'ktp' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
-            'kk' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($existingEmployee?->id, 'employee_id')],
+            'password' => [$existingEmployee ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
+            'ktp' => [$existingEmployee ? 'sometimes' : 'required', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'kk' => [$existingEmployee ? 'sometimes' : 'required', 'image', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'status' => ['nullable', 'in:active,inactive'],
         ]);
 
-        $employee = DB::transaction(function () use ($request, $validated) {
-            $ktpPath = $request->file('ktp')->store('employees/ktp', 'public');
-            $kkPath = $request->file('kk')->store('employees/kk', 'public');
+        $employee = DB::transaction(function () use ($request, $validated, $existingEmployee) {
+            $employee = $existingEmployee ?: new Employee();
 
-            $employee = Employee::create([
+            if ($request->hasFile('ktp')) {
+                $ktpPath = $request->file('ktp')->store('employees/ktp', 'public');
+                $employee->ktp_url = Storage::url($ktpPath);
+            }
+
+            if ($request->hasFile('kk')) {
+                $kkPath = $request->file('kk')->store('employees/kk', 'public');
+                $employee->kk_url = Storage::url($kkPath);
+            }
+
+            $employee->fill([
                 'full_name' => $validated['full_name'],
                 'store_id' => $validated['store_id'],
                 'email' => $validated['email'],
                 'join_date' => $validated['join_date'],
                 'role_id' => $validated['role_id'],
-                'ktp_url' => Storage::url($ktpPath),
-                'kk_url' => Storage::url($kkPath),
-                'status' => 'active',
+                'status' => $validated['status'] ?? ($employee->status ?: 'active'),
             ]);
+            $employee->save();
 
-            $employee->stores()->sync([$validated['store_id']]);
+            $employee->stores()->syncWithoutDetaching([$validated['store_id']]);
 
-            User::create([
-                'employee_id' => $employee->id,
+            $userPayload = [
                 'current_store_id' => $validated['store_id'],
                 'name' => $employee->full_name,
                 'username' => $validated['username'],
                 'email' => $employee->email,
-                'password' => Hash::make($validated['password']),
-            ]);
+            ];
+
+            if (!empty($validated['password'])) {
+                $userPayload['password'] = Hash::make($validated['password']);
+            }
+
+            User::query()->updateOrCreate(
+                ['employee_id' => $employee->id],
+                $userPayload
+            );
 
             return $employee;
         });
 
         return response()->json([
             'status' => 'sukses',
-            'message' => 'created',
+            'message' => $existingEmployee ? 'updated' : 'created',
             'data' => $employee,
-        ], 201);
+        ], $existingEmployee ? 200 : 201);
     }
 
     public function show(Employee $employee): JsonResponse
@@ -160,5 +184,32 @@ class EmployeeController extends Controller
             'message' => 'deleted',
             'data' => null,
         ]);
+    }
+
+    private function existingEmployeeForUpsert(Request $request): ?Employee
+    {
+        $user = $request->user();
+
+        if ($user?->employee?->role?->role_name !== 'admin') {
+            return null;
+        }
+
+        if ($request->filled('email')) {
+            $employee = Employee::query()->where('email', $request->string('email'))->first();
+
+            if ($employee) {
+                return $employee;
+            }
+        }
+
+        if ($request->filled('username')) {
+            $user = User::query()->where('username', $request->string('username'))->first();
+
+            if ($user?->employee_id) {
+                return Employee::query()->find($user->employee_id);
+            }
+        }
+
+        return null;
     }
 }
