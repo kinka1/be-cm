@@ -17,6 +17,10 @@ class EnsureStoreAccess
             return $next($request);
         }
 
+        if ($this->isAdmin($user)) {
+            return $next($request);
+        }
+
         $allowedStoreIds = $user->accessibleStores()->pluck('stores.id')->map(fn ($id) => (int) $id)->all();
 
         if ($allowedStoreIds === []) {
@@ -35,6 +39,13 @@ class EnsureStoreAccess
         }
 
         return $next($request);
+    }
+
+    private function isAdmin($user): bool
+    {
+        $user->loadMissing('employee.role');
+
+        return strtolower((string) $user->employee?->role?->role_name) === 'admin';
     }
 
     private function requestedStoreId(Request $request): ?int
