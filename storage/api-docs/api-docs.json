@@ -3197,7 +3197,12 @@
                                         ]
                                     },
                                     "table_id": {
+                                        "description": "Optional legacy table relation to calon_mantu.id",
                                         "type": "integer"
+                                    },
+                                    "table_label": {
+                                        "description": "Free text table label without database relation, e.g. Meja 01",
+                                        "type": "string"
                                     },
                                     "customer_name": {
                                         "type": "string"
@@ -3447,7 +3452,12 @@
                                         ]
                                     },
                                     "table_id": {
+                                        "description": "Optional legacy table relation to calon_mantu.id",
                                         "type": "integer"
+                                    },
+                                    "table_label": {
+                                        "description": "Free text table label without database relation, e.g. Meja 01",
+                                        "type": "string"
                                     },
                                     "customer_name": {
                                         "type": "string"
@@ -3518,7 +3528,12 @@
                                         "type": "integer"
                                     },
                                     "table_id": {
+                                        "description": "Optional legacy table relation to calon_mantu.id",
                                         "type": "integer"
+                                    },
+                                    "table_label": {
+                                        "description": "Free text table label without database relation, e.g. Meja 01",
+                                        "type": "string"
                                     },
                                     "employee_id": {
                                         "type": "integer"

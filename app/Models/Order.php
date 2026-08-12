@@ -13,6 +13,7 @@ class Order extends Model
         'store_id',
         'order_number',
         'table_id',
+        'table_label',
         'order_type',
         'customer_name',
         'employee_id',

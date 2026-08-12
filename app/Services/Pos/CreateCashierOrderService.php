@@ -57,6 +57,7 @@ class CreateCashierOrderService
                 'order_number' => $this->generateOrderNumber(),
                 'store_id' => $data['store_id'],
                 'table_id' => $data['table_id'] ?? null,
+                'table_label' => $data['table_label'] ?? null,
                 'order_type' => $data['order_type'],
                 'customer_name' => $data['customer_name'] ?? null,
                 'employee_id' => $data['employee_id'],
