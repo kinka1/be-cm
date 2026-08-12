@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use ZipArchive;
 
-class IngredientImportController extends Controller
+class MenuImportController extends Controller
 {
     private const HEADERS = [
         'store_code',
@@ -24,6 +24,7 @@ class IngredientImportController extends Controller
         'minimum_stock',
         'current_stock',
         'cost_price',
+        'selling_price',
         'description',
         'is_active',
     ];
@@ -63,7 +64,7 @@ class IngredientImportController extends Controller
 
         return response()->json([
             'status' => 'sukses',
-            'message' => $summary['errors'] === [] ? 'import ingredient selesai' : 'import ingredient selesai dengan beberapa error',
+            'message' => $summary['errors'] === [] ? 'import menu selesai' : 'import menu selesai dengan beberapa error',
             'data' => $summary,
         ]);
     }
@@ -72,9 +73,9 @@ class IngredientImportController extends Controller
     {
         $rows = [
             self::HEADERS,
-            ['JERUCHA', 'Bahan Baku', 'Matcha Powder', 'JERUCHA-ING-MATCHA-POWDER', 'gram', '1000', '0', '0', 'Bahan matcha', 'true'],
-            ['JERUCHA', 'Bahan Baku', 'Milk', 'JERUCHA-ING-MILK', 'ml', '1000', '0', '0', 'Susu', 'true'],
-            ['JERUCHA', 'Bahan Baku', 'Coffee Beans', 'JERUCHA-ING-COFFEE-BEANS', 'gram', '1000', '0', '0', 'Biji kopi', 'true'],
+            ['JERUCHA', 'Coffee', 'Americano', 'JERUCHA-MENU-AMERICANO', 'cup', '0', '0', '8000', '18000', 'Kopi hitam', 'true'],
+            ['JERUCHA', 'Non Coffee', 'Matcha Latte', 'JERUCHA-MENU-MATCHA-LATTE', 'cup', '0', '0', '10000', '22000', 'Matcha susu', 'true'],
+            ['JERUCHA', 'Snack', 'French Fries', 'JERUCHA-MENU-FRENCH-FRIES', 'portion', '0', '0', '9000', '20000', 'Kentang goreng', 'true'],
         ];
 
         return response()->streamDownload(function () use ($rows): void {
@@ -85,22 +86,22 @@ class IngredientImportController extends Controller
             }
 
             fclose($handle);
-        }, 'ingredient-import-template.csv', ['Content-Type' => 'text/csv']);
+        }, 'menu-import-template.csv', ['Content-Type' => 'text/csv']);
     }
 
     public function templateExcel()
     {
         $rows = [
             self::HEADERS,
-            ['JERUCHA', 'Bahan Baku', 'Matcha Powder', 'JERUCHA-ING-MATCHA-POWDER', 'gram', '1000', '0', '0', 'Bahan matcha', 'true'],
-            ['JERUCHA', 'Bahan Baku', 'Milk', 'JERUCHA-ING-MILK', 'ml', '1000', '0', '0', 'Susu', 'true'],
-            ['JERUCHA', 'Bahan Baku', 'Coffee Beans', 'JERUCHA-ING-COFFEE-BEANS', 'gram', '1000', '0', '0', 'Biji kopi', 'true'],
+            ['JERUCHA', 'Coffee', 'Americano', 'JERUCHA-MENU-AMERICANO', 'cup', '0', '0', '8000', '18000', 'Kopi hitam', 'true'],
+            ['JERUCHA', 'Non Coffee', 'Matcha Latte', 'JERUCHA-MENU-MATCHA-LATTE', 'cup', '0', '0', '10000', '22000', 'Matcha susu', 'true'],
+            ['JERUCHA', 'Snack', 'French Fries', 'JERUCHA-MENU-FRENCH-FRIES', 'portion', '0', '0', '9000', '20000', 'Kentang goreng', 'true'],
         ];
 
         $path = $this->createXlsxTemplate($rows);
 
         return response()
-            ->download($path, 'ingredient-import-template.xlsx', [
+            ->download($path, 'menu-import-template.xlsx', [
                 'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             ])
             ->deleteFileAfterSend(true);
@@ -111,8 +112,8 @@ class IngredientImportController extends Controller
         $store = $this->resolveStore($row, $data['store_id'] ?? null);
         $category = $this->category($row, $store->id, $data['category_id'] ?? null);
 
-        foreach (['product_name', 'sku', 'unit_of_measure'] as $field) {
-            if (empty($row[$field])) {
+        foreach (['product_name', 'sku', 'unit_of_measure', 'selling_price'] as $field) {
+            if (($row[$field] ?? '') === '') {
                 throw ValidationException::withMessages([$field => ["{$field} wajib diisi"]]);
             }
         }
@@ -120,13 +121,13 @@ class IngredientImportController extends Controller
         $payload = [
             'store_id' => $store->id,
             'category_id' => $category->id,
-            'product_type' => 'ingredient',
+            'product_type' => 'menu',
             'product_name' => $row['product_name'],
             'description' => $row['description'] ?? null,
             'unit_of_measure' => $row['unit_of_measure'],
             'minimum_stock' => (float) ($row['minimum_stock'] ?? 0),
             'cost_price' => (float) ($row['cost_price'] ?? 0),
-            'selling_price' => 0,
+            'selling_price' => (float) $row['selling_price'],
             'is_active' => $this->boolean($row['is_active'] ?? true),
         ];
 
@@ -144,7 +145,7 @@ class IngredientImportController extends Controller
                 'reference_type' => 'adjustment',
                 'reference_id' => null,
                 'employee_id' => null,
-                'notes' => 'Initial stock from ingredient import',
+                'notes' => 'Initial stock from menu import',
                 'transaction_date' => now(),
                 'created_at' => now(),
             ]);
@@ -184,11 +185,13 @@ class IngredientImportController extends Controller
             return $category;
         }
 
-        $categoryName = $row['category_name'] ?: 'Bahan Baku';
+        if (empty($row['category_name'])) {
+            throw ValidationException::withMessages(['category_name' => ['category_name wajib diisi jika category_id tidak dikirim']]);
+        }
 
         return Category::query()->updateOrCreate(
-            ['store_id' => $storeId, 'category_name' => $categoryName],
-            ['description' => 'Kategori bahan gudang']
+            ['store_id' => $storeId, 'category_name' => $row['category_name']],
+            ['description' => 'Kategori menu']
         );
     }
 
@@ -235,7 +238,7 @@ class IngredientImportController extends Controller
 
     private function createXlsxTemplate(array $rows): string
     {
-        $path = tempnam(sys_get_temp_dir(), 'ingredient-template-');
+        $path = tempnam(sys_get_temp_dir(), 'menu-template-');
         $zip = new ZipArchive();
 
         if ($zip->open($path, ZipArchive::OVERWRITE) !== true) {
@@ -263,7 +266,7 @@ XML);
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
     <sheets>
-        <sheet name="Ingredients" sheetId="1" r:id="rId1"/>
+        <sheet name="Menus" sheetId="1" r:id="rId1"/>
     </sheets>
 </workbook>
 XML);

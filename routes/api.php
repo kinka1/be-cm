@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\IngredientImportController;
 use App\Http\Controllers\Api\IngredientStockController;
+use App\Http\Controllers\Api\MenuImportController;
 use App\Http\Controllers\Api\Payments\BniQrisDevelopmentController;
 use App\Http\Controllers\Api\Payments\BniQrisWebhookController;
 use App\Http\Controllers\Api\Payments\MidtransWebhookController;
@@ -85,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('ingredients/import-template', [IngredientImportController::class, 'template']);
     Route::get('ingredients/import-template.xlsx', [IngredientImportController::class, 'templateExcel']);
     Route::post('ingredients/import', [IngredientImportController::class, 'store']);
+    Route::get('menus/import-template', [MenuImportController::class, 'template']);
+    Route::get('menus/import-template.xlsx', [MenuImportController::class, 'templateExcel']);
+    Route::post('menus/import', [MenuImportController::class, 'store']);
     Route::get('stock-transactions', [StockTransactionController::class, 'index']);
     Route::post('stock-transactions', [StockTransactionController::class, 'store']);
     Route::apiResource('suppliers', SupplierController::class);

@@ -386,6 +386,21 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/menus/import-template', summary: 'Download menu import CSV template', tags: ['Stock'], responses: [new OA\Response(response: 200, description: 'CSV file')])]
+    public function menuImportTemplate(): void
+    {
+    }
+
+    #[OA\Get(path: '/api/menus/import-template.xlsx', summary: 'Download menu import Excel template', tags: ['Stock'], responses: [new OA\Response(response: 200, description: 'XLSX file')])]
+    public function menuImportExcelTemplate(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/menus/import', summary: 'Import menu products from CSV or XLSX', tags: ['Stock'], requestBody: new OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(required: ['file'], properties: [new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'CSV, TXT, or XLSX file. Max 5MB. Required columns: store_code, category_name, product_name, sku, unit_of_measure, minimum_stock, current_stock, cost_price, selling_price, description, is_active.'), new OA\Property(property: 'store_id', type: 'integer', description: 'Optional store override. If filled, store_code column is ignored.'), new OA\Property(property: 'category_id', type: 'integer', description: 'Optional category override. If filled, category_name column is ignored.')], type: 'object'))), responses: [new OA\Response(response: 200, description: 'Import completed. Response data contains created, updated, skipped, and errors.'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function importMenus(): void
+    {
+    }
+
     #[OA\Get(
         path: '/api/tables',
         summary: 'List QR tables',

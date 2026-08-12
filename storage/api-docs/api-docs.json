@@ -2122,6 +2122,79 @@
                 }
             }
         },
+        "/api/menus/import-template": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Download menu import CSV template",
+                "operationId": "12109526f609cd862f3234ba2e2b2c7f",
+                "responses": {
+                    "200": {
+                        "description": "CSV file"
+                    }
+                }
+            }
+        },
+        "/api/menus/import-template.xlsx": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Download menu import Excel template",
+                "operationId": "3d41b014e983db97fb4813f513075038",
+                "responses": {
+                    "200": {
+                        "description": "XLSX file"
+                    }
+                }
+            }
+        },
+        "/api/menus/import": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Import menu products from CSV or XLSX",
+                "operationId": "4ce7fa2cb21ca4007979873550dc6b80",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "CSV, TXT, or XLSX file. Max 5MB. Required columns: store_code, category_name, product_name, sku, unit_of_measure, minimum_stock, current_stock, cost_price, selling_price, description, is_active.",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "store_id": {
+                                        "description": "Optional store override. If filled, store_code column is ignored.",
+                                        "type": "integer"
+                                    },
+                                    "category_id": {
+                                        "description": "Optional category override. If filled, category_name column is ignored.",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Import completed. Response data contains created, updated, skipped, and errors."
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
         "/api/tables": {
             "get": {
                 "tags": [
