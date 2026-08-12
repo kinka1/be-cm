@@ -371,6 +371,21 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/ingredients/import-template', summary: 'Download ingredient import CSV template', tags: ['Stock'], responses: [new OA\Response(response: 200, description: 'CSV file')])]
+    public function ingredientImportTemplate(): void
+    {
+    }
+
+    #[OA\Get(path: '/api/ingredients/import-template.xlsx', summary: 'Download ingredient import Excel template', tags: ['Stock'], responses: [new OA\Response(response: 200, description: 'XLSX file')])]
+    public function ingredientImportExcelTemplate(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/ingredients/import', summary: 'Import warehouse ingredients from CSV or XLSX', tags: ['Stock'], requestBody: new OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(required: ['file'], properties: [new OA\Property(property: 'file', type: 'string', format: 'binary'), new OA\Property(property: 'store_id', type: 'integer', description: 'Optional store override. If empty, store_code column is used.'), new OA\Property(property: 'category_id', type: 'integer', description: 'Optional category override. If empty, category_name column is used or auto-created.')], type: 'object'))), responses: [new OA\Response(response: 200, description: 'Import completed'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function importIngredients(): void
+    {
+    }
+
     #[OA\Get(
         path: '/api/tables',
         summary: 'List QR tables',

@@ -2050,6 +2050,78 @@
                 }
             }
         },
+        "/api/ingredients/import-template": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Download ingredient import CSV template",
+                "operationId": "67180ab7a1dc6a16ea66def5b77db95b",
+                "responses": {
+                    "200": {
+                        "description": "CSV file"
+                    }
+                }
+            }
+        },
+        "/api/ingredients/import-template.xlsx": {
+            "get": {
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Download ingredient import Excel template",
+                "operationId": "6be28ecc8fe10117f0f6d6b00a920fea",
+                "responses": {
+                    "200": {
+                        "description": "XLSX file"
+                    }
+                }
+            }
+        },
+        "/api/ingredients/import": {
+            "post": {
+                "tags": [
+                    "Stock"
+                ],
+                "summary": "Import warehouse ingredients from CSV or XLSX",
+                "operationId": "a81814124324744002472199ac8688f4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "store_id": {
+                                        "description": "Optional store override. If empty, store_code column is used.",
+                                        "type": "integer"
+                                    },
+                                    "category_id": {
+                                        "description": "Optional category override. If empty, category_name column is used or auto-created.",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Import completed"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
         "/api/tables": {
             "get": {
                 "tags": [
