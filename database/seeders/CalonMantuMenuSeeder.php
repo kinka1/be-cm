@@ -34,7 +34,7 @@ class CalonMantuMenuSeeder extends Seeder
                         'description' => $menu['description'] ?? null,
                         'unit_of_measure' => 'pcs',
                         'minimum_stock' => 0,
-                        'current_stock' => 0,
+                        'current_stock' => 1000000,
                         'cost_price' => 0,
                         'selling_price' => $menu['price'],
                         'is_active' => true,
