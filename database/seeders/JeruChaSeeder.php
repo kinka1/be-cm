@@ -69,6 +69,14 @@ class JeruChaSeeder extends Seeder
                 return [$categoryName => $category];
             });
 
+        $ingredientCategory = Category::query()->updateOrCreate(
+            [
+                'store_id' => $store->id,
+                'category_name' => 'Bahan Baku',
+            ],
+            ['description' => 'Bahan gudang JeruCha']
+        );
+
         foreach ($this->menus() as $categoryName => $products) {
             foreach ($products as $product) {
                 Product::query()->updateOrCreate(
@@ -76,6 +84,7 @@ class JeruChaSeeder extends Seeder
                     [
                         'store_id' => $store->id,
                         'category_id' => $categories[$categoryName]->id,
+                        'product_type' => 'menu',
                         'product_name' => $product['name'],
                         'description' => null,
                         'unit_of_measure' => 'pcs',
@@ -87,6 +96,25 @@ class JeruChaSeeder extends Seeder
                     ]
                 );
             }
+        }
+
+        foreach ($this->ingredients() as $ingredient) {
+            Product::query()->updateOrCreate(
+                ['sku' => $ingredient['sku']],
+                [
+                    'store_id' => $store->id,
+                    'category_id' => $ingredientCategory->id,
+                    'product_type' => 'ingredient',
+                    'product_name' => $ingredient['name'],
+                    'description' => null,
+                    'unit_of_measure' => $ingredient['unit'],
+                    'minimum_stock' => 0,
+                    'current_stock' => 0,
+                    'cost_price' => 0,
+                    'selling_price' => 0,
+                    'is_active' => true,
+                ]
+            );
         }
     }
 
@@ -162,6 +190,29 @@ class JeruChaSeeder extends Seeder
             'Tambahan' => [
                 ['name' => 'Extra Shot', 'sku' => 'JERUCHA-EXTRA-SHOT', 'price' => 5000],
             ],
+        ];
+    }
+
+    private function ingredients(): array
+    {
+        return [
+            ['name' => 'Matcha Powder', 'sku' => 'JERUCHA-ING-MATCHA-POWDER', 'unit' => 'gram'],
+            ['name' => 'Berry Syrup', 'sku' => 'JERUCHA-ING-BERRY-SYRUP', 'unit' => 'ml'],
+            ['name' => 'Honey', 'sku' => 'JERUCHA-ING-HONEY', 'unit' => 'ml'],
+            ['name' => 'Chocolate Powder', 'sku' => 'JERUCHA-ING-CHOCOLATE-POWDER', 'unit' => 'gram'],
+            ['name' => 'Coffee Beans', 'sku' => 'JERUCHA-ING-COFFEE-BEANS', 'unit' => 'gram'],
+            ['name' => 'Milk', 'sku' => 'JERUCHA-ING-MILK', 'unit' => 'ml'],
+            ['name' => 'Aren Syrup', 'sku' => 'JERUCHA-ING-AREN-SYRUP', 'unit' => 'ml'],
+            ['name' => 'Vanilla Syrup', 'sku' => 'JERUCHA-ING-VANILLA-SYRUP', 'unit' => 'ml'],
+            ['name' => 'Butterscotch Syrup', 'sku' => 'JERUCHA-ING-BUTTERSCOTCH-SYRUP', 'unit' => 'ml'],
+            ['name' => 'Orange', 'sku' => 'JERUCHA-ING-ORANGE', 'unit' => 'pcs'],
+            ['name' => 'Yakult', 'sku' => 'JERUCHA-ING-YAKULT', 'unit' => 'pcs'],
+            ['name' => 'Red Velvet Powder', 'sku' => 'JERUCHA-ING-RED-VELVET-POWDER', 'unit' => 'gram'],
+            ['name' => 'Cookies', 'sku' => 'JERUCHA-ING-COOKIES', 'unit' => 'gram'],
+            ['name' => 'Toast Bread', 'sku' => 'JERUCHA-ING-TOAST-BREAD', 'unit' => 'pcs'],
+            ['name' => 'Cheese', 'sku' => 'JERUCHA-ING-CHEESE', 'unit' => 'gram'],
+            ['name' => 'Chocolate Spread', 'sku' => 'JERUCHA-ING-CHOCOLATE-SPREAD', 'unit' => 'gram'],
+            ['name' => 'Cooking Oil', 'sku' => 'JERUCHA-ING-COOKING-OIL', 'unit' => 'ml'],
         ];
     }
 }

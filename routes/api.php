@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssetSummaryController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\IngredientStockController;
 use App\Http\Controllers\Api\Payments\BniQrisDevelopmentController;
 use App\Http\Controllers\Api\Payments\BniQrisWebhookController;
 use App\Http\Controllers\Api\Payments\MidtransWebhookController;
@@ -79,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('tables/{table}/status', [TableController::class, 'updateStatus']);
     Route::apiResource('tables', TableController::class);
     Route::get('stock-report', [StockReportController::class, 'index']);
+    Route::get('ingredient-stock', [IngredientStockController::class, 'index']);
     Route::get('stock-transactions', [StockTransactionController::class, 'index']);
     Route::post('stock-transactions', [StockTransactionController::class, 'store']);
     Route::apiResource('suppliers', SupplierController::class);

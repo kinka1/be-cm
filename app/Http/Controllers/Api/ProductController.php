@@ -22,6 +22,10 @@ class ProductController extends Controller
             $query->where('store_id', $request->integer('store_id'));
         }
 
+        if ($request->filled('product_type')) {
+            $query->where('product_type', $request->string('product_type'));
+        }
+
         if ($request->filled('is_active')) {
             $query->where('is_active', filter_var($request->string('is_active'), FILTER_VALIDATE_BOOLEAN));
         }
@@ -48,6 +52,7 @@ class ProductController extends Controller
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'sku' => ['required', 'string', 'max:255', 'unique:products,sku'],
             'category_id' => ['required', 'integer', Rule::exists('categories', 'id')->where('store_id', $request->integer('store_id'))],
+            'product_type' => ['nullable', 'in:menu,ingredient'],
             'description' => ['nullable', 'string'],
             'unit_of_measure' => ['required', 'string', 'max:50'],
             'minimum_stock' => ['nullable', 'numeric', 'min:0'],
@@ -84,6 +89,7 @@ class ProductController extends Controller
             'store_id' => ['sometimes', 'required', 'integer', 'exists:stores,id'],
             'sku' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('products', 'sku')->ignore($product->id)],
             'category_id' => ['sometimes', 'required', 'integer', Rule::exists('categories', 'id')->where('store_id', $storeId)],
+            'product_type' => ['nullable', 'in:menu,ingredient'],
             'description' => ['nullable', 'string'],
             'unit_of_measure' => ['sometimes', 'required', 'string', 'max:50'],
             'minimum_stock' => ['nullable', 'numeric', 'min:0'],

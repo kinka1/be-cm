@@ -99,11 +99,11 @@ class RecipeController extends Controller
     private function rules(?Recipe $recipe = null): array
     {
         return [
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('product_type', 'menu')],
             'ingredient_id' => [
                 'required',
                 'integer',
-                'exists:products,id',
+                Rule::exists('products', 'id')->where('product_type', 'ingredient'),
                 'different:product_id',
                 Rule::unique('recipes', 'ingredient_id')
                     ->where(fn ($query) => $query->where('product_id', request()->integer('product_id')))

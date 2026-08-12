@@ -16,6 +16,7 @@ class Product extends Model
         'product_name',
         'sku',
         'category_id',
+        'product_type',
         'description',
         'unit_of_measure',
         'minimum_stock',

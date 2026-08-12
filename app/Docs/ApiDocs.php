@@ -366,6 +366,11 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/ingredient-stock', summary: 'Get warehouse ingredient stock', tags: ['Stock'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'category_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'product_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'low_stock_only', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')), new OA\Parameter(name: 'is_active', in: 'query', required: false, schema: new OA\Schema(type: 'boolean')), new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function ingredientStock(): void
+    {
+    }
+
     #[OA\Get(
         path: '/api/tables',
         summary: 'List QR tables',
