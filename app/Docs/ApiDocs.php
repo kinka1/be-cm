@@ -885,6 +885,11 @@ class ApiDocs
     {
     }
 
+    #[OA\Post(path: '/api/payments/xendit/webhook', summary: 'Xendit QRIS payment webhook', tags: ['Payments'], parameters: [new OA\Parameter(name: 'x-callback-token', in: 'header', required: false, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 401, description: 'Invalid callback token'), new OA\Response(response: 422, description: 'Missing order identifier')])]
+    public function xenditWebhook(): void
+    {
+    }
+
     #[OA\Post(
         path: '/api/payments/bni-qris/webhook',
         summary: 'BNI QRIS payment webhook',

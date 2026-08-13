@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MenuImportController;
 use App\Http\Controllers\Api\Payments\BniQrisDevelopmentController;
 use App\Http\Controllers\Api\Payments\BniQrisWebhookController;
 use App\Http\Controllers\Api\Payments\MidtransWebhookController;
+use App\Http\Controllers\Api\Payments\XenditWebhookController;
 use App\Http\Controllers\Api\Pos\CartController;
 use App\Http\Controllers\Api\Pos\CashierOrderController;
 use App\Http\Controllers\Api\Pos\CashierSessionController;
@@ -154,3 +155,4 @@ Route::prefix('pos')->group(function () {
 
 Route::post('payments/midtrans/webhook', MidtransWebhookController::class);
 Route::post('payments/bni-qris/webhook', BniQrisWebhookController::class);
+Route::post('payments/xendit/webhook', XenditWebhookController::class);

@@ -16,6 +16,7 @@ class CreateQrOrderService
         private readonly StockAvailabilityService $stockAvailabilityService,
         private readonly MidtransPaymentService $midtransPaymentService,
         private readonly BniQrisPaymentService $bniQrisPaymentService,
+        private readonly XenditPaymentService $xenditPaymentService,
     ) {
     }
 
@@ -90,6 +91,10 @@ class CreateQrOrderService
     {
         if (config('services.qris_gateway') === 'bni') {
             return $this->bniQrisPaymentService->createQrisTransaction($order);
+        }
+
+        if (config('services.qris_gateway') === 'xendit') {
+            return $this->xenditPaymentService->createQrisTransaction($order);
         }
 
         return array_merge(

@@ -5507,6 +5507,36 @@
                 }
             }
         },
+        "/api/payments/xendit/webhook": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Xendit QRIS payment webhook",
+                "operationId": "de29a8fa964dd4fe373f5045812035f4",
+                "parameters": [
+                    {
+                        "name": "x-callback-token",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Invalid callback token"
+                    },
+                    "422": {
+                        "description": "Missing order identifier"
+                    }
+                }
+            }
+        },
         "/api/payments/bni-qris/webhook": {
             "post": {
                 "tags": [

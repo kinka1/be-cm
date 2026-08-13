@@ -44,6 +44,14 @@ return [
 
     'qris_gateway' => env('QRIS_GATEWAY', 'midtrans'),
 
+    'xendit' => [
+        'secret_key' => env('XENDIT_SECRET_KEY'),
+        'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
+        'base_url' => env('XENDIT_BASE_URL', 'https://api.xendit.co'),
+        'qris_expires_minutes' => env('XENDIT_QRIS_EXPIRES_MINUTES', 30),
+        'is_production' => env('XENDIT_IS_PRODUCTION', false),
+    ],
+
     'bni_qris' => [
         'base_url' => env('BNI_QRIS_BASE_URL'),
         'token_path' => env('BNI_QRIS_TOKEN_PATH'),
