@@ -640,7 +640,7 @@ class ApiDocs
     {
     }
 
-    #[OA\Get(path: '/api/pos/orders', summary: 'List POS orders', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'order_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'payment_status', in: 'query', required: false, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/pos/orders', summary: 'List POS orders without pagination', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'order_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'payment_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'date', in: 'query', required: false, description: 'Filter orders by order_date. Format: YYYY-MM-DD.', schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-13'))], responses: [new OA\Response(response: 200, description: 'OK. Data is an array of all matching orders.'), new OA\Response(response: 422, description: 'Validation error')])]
     public function listPosOrders(): void
     {
     }

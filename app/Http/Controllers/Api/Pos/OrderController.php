@@ -11,6 +11,10 @@ class OrderController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $request->validate([
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
         $query = Order::query()->with(['store', 'details.product', 'payment'])->orderByDesc('order_date');
 
         if ($request->filled('store_id')) {
@@ -25,10 +29,14 @@ class OrderController extends Controller
             $query->where('payment_status', $request->string('payment_status'));
         }
 
+        if ($request->filled('date')) {
+            $query->whereDate('order_date', $request->string('date'));
+        }
+
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $query->paginate(15),
+            'data' => $query->get(),
         ]);
     }
 

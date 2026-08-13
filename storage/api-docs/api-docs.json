@@ -3813,7 +3813,7 @@
                 "tags": [
                     "POS"
                 ],
-                "summary": "List POS orders",
+                "summary": "List POS orders without pagination",
                 "operationId": "36a139b408ce1387323718944e17a716",
                 "parameters": [
                     {
@@ -3839,11 +3839,25 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Filter orders by order_date. Format: YYYY-MM-DD.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-08-13"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK. Data is an array of all matching orders."
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
