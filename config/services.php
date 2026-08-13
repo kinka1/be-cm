@@ -48,6 +48,7 @@ return [
         'secret_key' => env('XENDIT_SECRET_KEY'),
         'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
         'base_url' => env('XENDIT_BASE_URL', 'https://api.xendit.co'),
+        'callback_url' => env('XENDIT_CALLBACK_URL'),
         'qris_expires_minutes' => env('XENDIT_QRIS_EXPIRES_MINUTES', 30),
         'is_production' => env('XENDIT_IS_PRODUCTION', false),
     ],

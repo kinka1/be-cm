@@ -4,6 +4,7 @@ namespace App\Services\Pos;
 
 use App\Models\Order;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class XenditPaymentService
 {
@@ -25,18 +26,25 @@ class XenditPaymentService
         $response = Http::withBasicAuth($secretKey, '')
             ->acceptJson()
             ->post($baseUrl.'/qr_codes', [
-                'reference_id' => $order->order_number,
+                'external_id' => $order->order_number,
                 'type' => 'DYNAMIC',
-                'currency' => 'IDR',
                 'amount' => (int) round($order->total_amount),
+                'callback_url' => config('services.xendit.callback_url') ?: url('/api/payments/xendit/webhook'),
+                'currency' => 'IDR',
                 'expires_at' => now()->addMinutes((int) config('services.xendit.qris_expires_minutes', 30))->toISOString(),
             ]);
 
         $json = $response->json() ?: ['body' => $response->body()];
 
+        if (!$response->successful() || !$this->qrisString($json)) {
+            throw ValidationException::withMessages([
+                'xendit' => [data_get($json, 'message') ?: 'gagal membuat QRIS Xendit'],
+            ]);
+        }
+
         return [
             'payment_gateway' => 'xendit',
-            'gateway_order_id' => data_get($json, 'reference_id') ?: $order->order_number,
+            'gateway_order_id' => data_get($json, 'external_id') ?: $order->order_number,
             'gateway_transaction_id' => data_get($json, 'id'),
             'qris_transaction_id' => data_get($json, 'id'),
             'gateway_response' => $json,
@@ -52,5 +60,12 @@ class XenditPaymentService
         }
 
         return is_string($token) && hash_equals((string) $expected, $token);
+    }
+
+    private function qrisString(array $response): ?string
+    {
+        return data_get($response, 'qr_string')
+            ?: data_get($response, 'qr_code.qr_string')
+            ?: data_get($response, 'data.qr_string');
     }
 }
