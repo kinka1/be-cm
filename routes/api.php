@@ -147,6 +147,7 @@ Route::prefix('pos')->group(function () {
         Route::get('cashier-sessions/{cashierSession}/cash-movements', [CashierSessionController::class, 'cashMovements']);
         Route::post('cashier-orders', [CashierOrderController::class, 'store']);
         Route::get('orders', [OrderController::class, 'index']);
+        Route::get('orders/paginated', [OrderController::class, 'paginated']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
         Route::patch('orders/{order}/status', [OrderStatusController::class, 'update']);
     });

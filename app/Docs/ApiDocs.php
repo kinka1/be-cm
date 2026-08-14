@@ -645,6 +645,11 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/pos/orders/paginated', summary: 'List POS orders with pagination', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'order_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'payment_status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'date', in: 'query', required: false, description: 'Filter orders by order_date. Format: YYYY-MM-DD.', schema: new OA\Schema(type: 'string', format: 'date', example: '2026-08-13')), new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)), new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page. Min 1, max 100, default 15.', schema: new OA\Schema(type: 'integer', example: 15))], responses: [new OA\Response(response: 200, description: 'OK. Data is a Laravel paginated response.'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function listPaginatedPosOrders(): void
+    {
+    }
+
     #[OA\Get(path: '/api/pos/orders/{id}', summary: 'Get POS order', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function showPosOrder(): void
     {
