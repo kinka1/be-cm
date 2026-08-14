@@ -2574,6 +2574,34 @@
                 }
             }
         },
+        "/api/public/pos/orders/{order_number}/payment-status": {
+            "get": {
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Public QR order payment status without authentication",
+                "operationId": "7d38d8b2bf4e0ae9b2b9d0a456c7e4de",
+                "parameters": [
+                    {
+                        "name": "order_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "ORD-20260813151418-4907"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Order not found"
+                    }
+                }
+            }
+        },
         "/api/pos/tables/{qr_code}/menu": {
             "get": {
                 "tags": [

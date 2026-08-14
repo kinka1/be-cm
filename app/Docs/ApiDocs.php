@@ -486,6 +486,22 @@ class ApiDocs
     }
 
     #[OA\Get(
+        path: '/api/public/pos/orders/{order_number}/payment-status',
+        summary: 'Public QR order payment status without authentication',
+        tags: ['Public'],
+        parameters: [
+            new OA\Parameter(name: 'order_number', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'ORD-20260813151418-4907')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'OK'),
+            new OA\Response(response: 404, description: 'Order not found'),
+        ]
+    )]
+    public function publicOrderPaymentStatus(): void
+    {
+    }
+
+    #[OA\Get(
         path: '/api/pos/tables/{qr_code}/menu',
         summary: 'List active POS menu for QR table',
         tags: ['POS'],

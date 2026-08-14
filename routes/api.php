@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Pos\MenuController;
 use App\Http\Controllers\Api\Pos\OrderController;
 use App\Http\Controllers\Api\Pos\OrderStatusController;
 use App\Http\Controllers\Api\Pos\PaymentMethodController;
+use App\Http\Controllers\Api\Pos\PublicOrderStatusController;
 use App\Http\Controllers\Api\Pos\QrOrderController;
 use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\RevenueReportController;
@@ -57,6 +58,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('public')->group(function () {
     Route::get('categories', [CategoryController::class, 'index']);
     Route::get('pos/menu', [MenuController::class, 'index']);
+    Route::get('pos/orders/{orderNumber}/payment-status', [PublicOrderStatusController::class, 'show']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
