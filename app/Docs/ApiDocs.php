@@ -248,6 +248,11 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/public/categories', summary: 'Public list categories without authentication', tags: ['Public'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function publicListCategories(): void
+    {
+    }
+
     #[OA\Post(path: '/api/categories', summary: 'Create category', tags: ['Categories'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'category_name'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'category_name', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created')])]
     public function createCategory(): void
     {
@@ -461,6 +466,22 @@ class ApiDocs
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
     public function listPosMenu(): void
+    {
+    }
+
+    #[OA\Get(
+        path: '/api/public/pos/menu',
+        summary: 'Public list active POS menu without authentication',
+        tags: ['Public'],
+        parameters: [
+            new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'category_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', default: 15)),
+        ],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function publicListPosMenu(): void
     {
     }
 

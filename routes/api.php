@@ -54,6 +54,11 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
+Route::prefix('public')->group(function () {
+    Route::get('categories', [CategoryController::class, 'index']);
+    Route::get('pos/menu', [MenuController::class, 'index']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::get('me/stores', [AuthController::class, 'stores']);

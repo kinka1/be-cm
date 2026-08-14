@@ -1270,6 +1270,30 @@
                 }
             }
         },
+        "/api/public/categories": {
+            "get": {
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Public list categories without authentication",
+                "operationId": "3480f76e379f830ba7126f392ae98039",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/categories/{id}": {
             "get": {
                 "tags": [
@@ -2459,6 +2483,55 @@
                 ],
                 "summary": "List active POS menu",
                 "operationId": "74c524c9199a4da628ebb4e2e685119b",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/public/pos/menu": {
+            "get": {
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Public list active POS menu without authentication",
+                "operationId": "7ab55f3fc092bc1016c88aad50f8e5b9",
                 "parameters": [
                     {
                         "name": "search",
@@ -5731,6 +5804,10 @@
         {
             "name": "Categories",
             "description": "Categories"
+        },
+        {
+            "name": "Public",
+            "description": "Public"
         },
         {
             "name": "Products",
