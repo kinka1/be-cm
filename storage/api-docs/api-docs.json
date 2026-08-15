@@ -2501,7 +2501,6 @@
                 }
             }
         },
-<<<<<<< HEAD
         "/api/public/pos/menu": {
             "get": {
                 "tags": [
@@ -2579,8 +2578,6 @@
                 }
             }
         },
-=======
->>>>>>> parent of dd7e91c (feat: add public endpoints for listing categories and active POS menu without authentication)
         "/api/pos/tables/{qr_code}/menu": {
             "get": {
                 "tags": [
@@ -5891,6 +5888,10 @@
         {
             "name": "POS",
             "description": "POS"
+        },
+        {
+            "name": "Public",
+            "description": "Public"
         },
         {
             "name": "POS Cashier Sessions",

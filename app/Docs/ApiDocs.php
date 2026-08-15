@@ -465,7 +465,6 @@ class ApiDocs
     }
 
     #[OA\Get(
-<<<<<<< HEAD
         path: '/api/public/pos/menu',
         summary: 'Public list active POS menu without authentication',
         tags: ['Public'],
@@ -498,8 +497,6 @@ class ApiDocs
     }
 
     #[OA\Get(
-=======
->>>>>>> parent of dd7e91c (feat: add public endpoints for listing categories and active POS menu without authentication)
         path: '/api/pos/tables/{qr_code}/menu',
         summary: 'List active POS menu for QR table',
         tags: ['POS'],
