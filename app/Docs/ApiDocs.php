@@ -521,7 +521,7 @@ class ApiDocs
         path: '/api/pos/qr-orders',
         summary: 'Create QR order and Midtrans QRIS payment',
         tags: ['POS'],
-        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['qr_code', 'items'], properties: [new OA\Property(property: 'qr_code', type: 'string'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'discount', type: 'number'), new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object'))], type: 'object')),
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['qr_code', 'items'], properties: [new OA\Property(property: 'qr_code', type: 'string'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'customer_email', type: 'string', format: 'email', description: 'Optional customer email for sending payment receipt after successful Xendit payment'), new OA\Property(property: 'discount', type: 'number'), new OA\Property(property: 'items', type: 'array', items: new OA\Items(properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object'))], type: 'object')),
         responses: [new OA\Response(response: 201, description: 'Created')]
     )]
     public function createQrOrder(): void

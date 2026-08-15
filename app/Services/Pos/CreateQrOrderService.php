@@ -38,6 +38,7 @@ class CreateQrOrderService
                 'table_id' => $table->id,
                 'order_type' => 'dine_in_qr',
                 'customer_name' => $data['customer_name'] ?? null,
+                'customer_email' => $data['customer_email'] ?? null,
                 'order_date' => now(),
                 'subtotal' => $totals['subtotal'],
                 'tax' => 0,

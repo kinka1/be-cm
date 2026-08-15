@@ -16,6 +16,7 @@ class Order extends Model
         'table_label',
         'order_type',
         'customer_name',
+        'customer_email',
         'employee_id',
         'cashier_session_id',
         'order_date',

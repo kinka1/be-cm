@@ -2674,6 +2674,11 @@
                                     "customer_name": {
                                         "type": "string"
                                     },
+                                    "customer_email": {
+                                        "description": "Optional customer email for sending payment receipt after successful Xendit payment",
+                                        "type": "string",
+                                        "format": "email"
+                                    },
                                     "discount": {
                                         "type": "number"
                                     },

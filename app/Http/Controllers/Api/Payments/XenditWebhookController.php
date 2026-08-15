@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Payments;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Pos\ReceiptEmailService;
 use App\Services\Pos\StockDeductionService;
 use App\Services\Pos\XenditPaymentService;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class XenditWebhookController extends Controller
 {
-    public function __invoke(Request $request, XenditPaymentService $xendit, StockDeductionService $stockDeduction): JsonResponse
+    public function __invoke(Request $request, XenditPaymentService $xendit, StockDeductionService $stockDeduction, ReceiptEmailService $receiptEmail): JsonResponse
     {
         $payload = $request->all();
 
@@ -48,7 +49,7 @@ class XenditWebhookController extends Controller
             })
             ->firstOrFail();
 
-        DB::transaction(function () use ($order, $payload, $transactionId, $status, $stockDeduction): void {
+        DB::transaction(function () use ($order, $payload, $transactionId, $status, $stockDeduction, $receiptEmail): void {
             $payment = $order->payment()->lockForUpdate()->firstOrFail();
             $payment->fill([
                 'payment_gateway' => 'xendit',
@@ -65,6 +66,7 @@ class XenditWebhookController extends Controller
 
                     $order->update(['payment_status' => 'paid', 'order_status' => 'preparing']);
                     $stockDeduction->deduct($order);
+                    $receiptEmail->send($order->fresh(['store', 'details.product', 'payment']));
                     return;
                 }
             }
