@@ -697,6 +697,11 @@ class ApiDocs
     {
     }
 
+    #[OA\Patch(path: '/api/pos/orders/{id}/payment-status', summary: 'Manually update POS order payment status', security: [['BearerAuth' => []]], tags: ['POS'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['payment_status'], properties: [new OA\Property(property: 'payment_status', type: 'string', enum: ['pending', 'paid', 'cancelled'])], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 422, description: 'Completed order or paid payment cannot be reverted')])]
+    public function updatePosOrderPaymentStatus(): void
+    {
+    }
+
     #[OA\Get(path: '/api/products/deleted', summary: 'List deleted products', tags: ['Products'], parameters: [new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function deletedProducts(): void
     {

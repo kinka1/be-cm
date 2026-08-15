@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Pos\CashierOrderController;
 use App\Http\Controllers\Api\Pos\CashierSessionController;
 use App\Http\Controllers\Api\Pos\MenuController;
 use App\Http\Controllers\Api\Pos\OrderController;
+use App\Http\Controllers\Api\Pos\OrderPaymentStatusController;
 use App\Http\Controllers\Api\Pos\OrderStatusController;
 use App\Http\Controllers\Api\Pos\PaymentMethodController;
 use App\Http\Controllers\Api\Pos\PublicOrderStatusController;
@@ -155,6 +156,7 @@ Route::prefix('pos')->group(function () {
         Route::post('cashier-orders', [CashierOrderController::class, 'store']);
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/paginated', [OrderController::class, 'paginated']);
+        Route::patch('orders/{order}/payment-status', [OrderPaymentStatusController::class, 'update']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
         Route::patch('orders/{order}/status', [OrderStatusController::class, 'update']);
     });

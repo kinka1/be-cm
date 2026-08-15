@@ -4133,6 +4133,61 @@
                 ]
             }
         },
+        "/api/pos/orders/{id}/payment-status": {
+            "patch": {
+                "tags": [
+                    "POS"
+                ],
+                "summary": "Manually update POS order payment status",
+                "operationId": "9d6097244c51d000ced86ad4ef54e4b0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payment_status"
+                                ],
+                                "properties": {
+                                    "payment_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "paid",
+                                            "cancelled"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "422": {
+                        "description": "Completed order or paid payment cannot be reverted"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/products/deleted": {
             "get": {
                 "tags": [
