@@ -1270,30 +1270,6 @@
                 }
             }
         },
-        "/api/public/categories": {
-            "get": {
-                "tags": [
-                    "Public"
-                ],
-                "summary": "Public list categories without authentication",
-                "operationId": "3480f76e379f830ba7126f392ae98039",
-                "parameters": [
-                    {
-                        "name": "store_id",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/api/categories/{id}": {
             "get": {
                 "tags": [
@@ -2525,6 +2501,7 @@
                 }
             }
         },
+<<<<<<< HEAD
         "/api/public/pos/menu": {
             "get": {
                 "tags": [
@@ -2602,6 +2579,8 @@
                 }
             }
         },
+=======
+>>>>>>> parent of dd7e91c (feat: add public endpoints for listing categories and active POS menu without authentication)
         "/api/pos/tables/{qr_code}/menu": {
             "get": {
                 "tags": [
@@ -5892,10 +5871,6 @@
         {
             "name": "Categories",
             "description": "Categories"
-        },
-        {
-            "name": "Public",
-            "description": "Public"
         },
         {
             "name": "Products",

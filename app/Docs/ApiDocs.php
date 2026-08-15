@@ -248,11 +248,6 @@ class ApiDocs
     {
     }
 
-    #[OA\Get(path: '/api/public/categories', summary: 'Public list categories without authentication', tags: ['Public'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
-    public function publicListCategories(): void
-    {
-    }
-
     #[OA\Post(path: '/api/categories', summary: 'Create category', tags: ['Categories'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'category_name'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'category_name', type: 'string'), new OA\Property(property: 'description', type: 'string')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created')])]
     public function createCategory(): void
     {
@@ -470,6 +465,7 @@ class ApiDocs
     }
 
     #[OA\Get(
+<<<<<<< HEAD
         path: '/api/public/pos/menu',
         summary: 'Public list active POS menu without authentication',
         tags: ['Public'],
@@ -502,6 +498,8 @@ class ApiDocs
     }
 
     #[OA\Get(
+=======
+>>>>>>> parent of dd7e91c (feat: add public endpoints for listing categories and active POS menu without authentication)
         path: '/api/pos/tables/{qr_code}/menu',
         summary: 'List active POS menu for QR table',
         tags: ['POS'],

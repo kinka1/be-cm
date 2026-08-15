@@ -56,12 +56,15 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
+<<<<<<< HEAD
 Route::prefix('public')->group(function () {
     Route::get('categories', [CategoryController::class, 'index']);
     Route::get('pos/menu', [MenuController::class, 'index']);
     Route::get('pos/orders/{orderNumber}/payment-status', [PublicOrderStatusController::class, 'show']);
 });
 
+=======
+>>>>>>> parent of dd7e91c (feat: add public endpoints for listing categories and active POS menu without authentication)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me']);
     Route::get('me/stores', [AuthController::class, 'stores']);
