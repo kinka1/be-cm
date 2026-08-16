@@ -19,6 +19,13 @@ class OrderDetail extends Model
         'created_at',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'integer',
+        ];
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
