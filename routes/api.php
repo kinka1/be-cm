@@ -134,6 +134,8 @@ Route::prefix('pos')->group(function () {
         Route::patch('carts/{cart}', [CartController::class, 'updateCart']);
         Route::delete('carts/{cart}', [CartController::class, 'deleteCart']);
         Route::post('carts/{cart}/items', [CartController::class, 'addCartItem']);
+        Route::post('carts/{cart}/items/bulk', [CartController::class, 'addBulkCartItems']);
+        Route::put('carts/{cart}/items', [CartController::class, 'replaceCartItems']);
         Route::patch('carts/{cart}/items/{item}', [CartController::class, 'updateCartItem']);
         Route::delete('carts/{cart}/items/{item}', [CartController::class, 'removeCartItem']);
         Route::delete('carts/{cart}/items', [CartController::class, 'clearCart']);

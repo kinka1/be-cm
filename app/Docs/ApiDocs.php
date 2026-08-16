@@ -610,6 +610,16 @@ class ApiDocs
     {
     }
 
+    #[OA\Post(path: '/api/pos/carts/{cart}/items/bulk', summary: 'Add multiple items to named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['items'], properties: [new OA\Property(property: 'items', type: 'array', minItems: 1, items: new OA\Items(required: ['product_id', 'quantity'], properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string', nullable: true)], type: 'object'))], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function addBulkNamedPosCartItems(): void
+    {
+    }
+
+    #[OA\Put(path: '/api/pos/carts/{cart}/items', summary: 'Replace/sync named POS cart items', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['items'], properties: [new OA\Property(property: 'items', type: 'array', items: new OA\Items(required: ['product_id', 'quantity'], properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string', nullable: true)], type: 'object'))], type: 'object')), responses: [new OA\Response(response: 200, description: 'Updated with final cart state'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function replaceNamedPosCartItems(): void
+    {
+    }
+
     #[OA\Patch(path: '/api/pos/carts/{cart}/items/{item}', summary: 'Update named POS cart item', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'item', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['quantity'], properties: [new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string')], type: 'object')), responses: [new OA\Response(response: 200, description: 'OK')])]
     public function updateNamedPosCartItem(): void
     {

@@ -145,6 +145,84 @@ class CartController extends Controller
         ], 201);
     }
 
+    public function addBulkCartItems(Request $request, PosCart $cart): JsonResponse
+    {
+        $this->authorizeActiveCart($request, $cart);
+
+        $data = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('store_id', $cart->store_id)],
+            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'items.*.notes' => ['nullable', 'string'],
+        ]);
+
+        DB::transaction(function () use ($cart, $data): void {
+            foreach ($data['items'] as $cartItem) {
+                $item = $cart->items()->where('product_id', $cartItem['product_id'])->lockForUpdate()->first();
+
+                if ($item) {
+                    $item->update([
+                        'quantity' => (float) $item->quantity + (float) $cartItem['quantity'],
+                        'notes' => array_key_exists('notes', $cartItem) ? $cartItem['notes'] : $item->notes,
+                    ]);
+
+                    continue;
+                }
+
+                $cart->items()->create([
+                    'product_id' => $cartItem['product_id'],
+                    'quantity' => $cartItem['quantity'],
+                    'notes' => $cartItem['notes'] ?? null,
+                ]);
+            }
+        });
+
+        return response()->json([
+            'status' => 'sukses',
+            'message' => 'created',
+            'data' => $this->cartResponse($cart),
+        ], 201);
+    }
+
+    public function replaceCartItems(Request $request, PosCart $cart): JsonResponse
+    {
+        $this->authorizeActiveCart($request, $cart);
+
+        $data = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('store_id', $cart->store_id)],
+            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'items.*.notes' => ['nullable', 'string'],
+        ]);
+
+        DB::transaction(function () use ($cart, $data): void {
+            $productIds = collect($data['items'])->pluck('product_id')->all();
+
+            if ($productIds === []) {
+                $cart->items()->delete();
+                return;
+            }
+
+            $cart->items()->whereNotIn('product_id', $productIds)->delete();
+
+            foreach ($data['items'] as $cartItem) {
+                $cart->items()->updateOrCreate(
+                    ['product_id' => $cartItem['product_id']],
+                    [
+                        'quantity' => $cartItem['quantity'],
+                        'notes' => $cartItem['notes'] ?? null,
+                    ]
+                );
+            }
+        });
+
+        return response()->json([
+            'status' => 'sukses',
+            'message' => 'updated',
+            'data' => $this->cartResponse($cart),
+        ]);
+    }
+
     public function updateCartItem(Request $request, PosCart $cart, PosCartItem $item): JsonResponse
     {
         $this->authorizeCartItem($request, $cart, $item);
