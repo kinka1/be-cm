@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Pos\CartController;
 use App\Http\Controllers\Api\Pos\CashierOrderController;
 use App\Http\Controllers\Api\Pos\CashierSessionController;
 use App\Http\Controllers\Api\Pos\MenuController;
+use App\Http\Controllers\Api\Pos\ModifierController;
 use App\Http\Controllers\Api\Pos\OrderController;
 use App\Http\Controllers\Api\Pos\OrderPaymentStatusController;
 use App\Http\Controllers\Api\Pos\OrderStatusController;
@@ -127,6 +128,11 @@ Route::prefix('pos')->group(function () {
     Route::get('tables/{qr_code}/menu', [MenuController::class, 'tableMenu']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('payment-methods', [PaymentMethodController::class, 'index']);
+        Route::get('modifiers', [ModifierController::class, 'index']);
+        Route::post('modifiers', [ModifierController::class, 'store']);
+        Route::patch('modifiers/{modifier}', [ModifierController::class, 'update']);
+        Route::delete('modifiers/{modifier}', [ModifierController::class, 'destroy']);
+        Route::post('categories/{category}/modifiers', [ModifierController::class, 'assignToCategory']);
         Route::get('menu', [MenuController::class, 'index']);
         Route::get('carts', [CartController::class, 'index']);
         Route::post('carts', [CartController::class, 'store']);
