@@ -70,7 +70,7 @@ class OrderPaymentStatusController extends Controller
                 $stockDeduction->deduct($order);
             }
 
-            return $order->fresh(['store', 'details.product', 'payment']);
+            return $order->fresh(['store', 'details.product', 'details.modifiers', 'payment']);
         });
 
         return response()->json([

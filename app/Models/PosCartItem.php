@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PosCartItem extends Model
 {
@@ -22,5 +23,10 @@ class PosCartItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function modifiers(): HasMany
+    {
+        return $this->hasMany(PosCartItemModifier::class, 'cart_item_id');
     }
 }

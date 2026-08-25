@@ -580,6 +580,31 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/pos/modifiers', summary: 'List POS modifiers', security: [['BearerAuth' => []]], tags: ['POS Modifiers'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'is_active', in: 'query', required: false, schema: new OA\Schema(type: 'boolean'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function listPosModifiers(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/modifiers', summary: 'Create POS modifier', security: [['BearerAuth' => []]], tags: ['POS Modifiers'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'name', 'price_delta'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'name', type: 'string', example: 'Upsize'), new OA\Property(property: 'price_delta', type: 'number', example: 3000), new OA\Property(property: 'is_active', type: 'boolean')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Created'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function createPosModifier(): void
+    {
+    }
+
+    #[OA\Patch(path: '/api/pos/modifiers/{modifier}', summary: 'Update POS modifier', security: [['BearerAuth' => []]], tags: ['POS Modifiers'], parameters: [new OA\Parameter(name: 'modifier', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(properties: [new OA\Property(property: 'name', type: 'string', example: 'Upsize Large'), new OA\Property(property: 'price_delta', type: 'number', example: 3000), new OA\Property(property: 'is_active', type: 'boolean')], type: 'object')), responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 404, description: 'Not found'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function updatePosModifier(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/pos/modifiers/{modifier}', summary: 'Delete POS modifier', security: [['BearerAuth' => []]], tags: ['POS Modifiers'], parameters: [new OA\Parameter(name: 'modifier', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Deleted'), new OA\Response(response: 404, description: 'Not found')])]
+    public function deletePosModifier(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/pos/categories/{category}/modifiers', summary: 'Assign POS modifier to category', security: [['BearerAuth' => []]], tags: ['POS Modifiers'], parameters: [new OA\Parameter(name: 'category', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['modifier_id'], properties: [new OA\Property(property: 'modifier_id', type: 'integer'), new OA\Property(property: 'is_active', type: 'boolean')], type: 'object')), responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function assignPosModifierToCategory(): void
+    {
+    }
+
     #[OA\Get(path: '/api/pos/carts', summary: 'List named POS carts', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['active', 'checked_out', 'cancelled']))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function listNamedPosCarts(): void
     {
@@ -615,7 +640,7 @@ class ApiDocs
     {
     }
 
-    #[OA\Put(path: '/api/pos/carts/{cart}/items', summary: 'Replace/sync named POS cart items', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['items'], properties: [new OA\Property(property: 'items', type: 'array', items: new OA\Items(required: ['product_id', 'quantity'], properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string', nullable: true)], type: 'object'))], type: 'object')), responses: [new OA\Response(response: 200, description: 'Updated with final cart state'), new OA\Response(response: 422, description: 'Validation error')])]
+    #[OA\Put(path: '/api/pos/carts/{cart}/items', summary: 'Replace/sync named POS cart items', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['items'], properties: [new OA\Property(property: 'items', type: 'array', items: new OA\Items(required: ['product_id', 'quantity'], properties: [new OA\Property(property: 'product_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'number'), new OA\Property(property: 'notes', type: 'string', nullable: true), new OA\Property(property: 'modifiers', type: 'array', maxItems: 1, items: new OA\Items(required: ['modifier_id'], properties: [new OA\Property(property: 'modifier_id', type: 'integer'), new OA\Property(property: 'quantity', type: 'integer', maximum: 1, example: 1)], type: 'object'))], type: 'object'))], type: 'object')), responses: [new OA\Response(response: 200, description: 'Updated with final cart state'), new OA\Response(response: 422, description: 'Validation error')])]
     public function replaceNamedPosCartItems(): void
     {
     }

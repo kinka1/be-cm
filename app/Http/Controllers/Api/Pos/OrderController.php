@@ -37,7 +37,7 @@ class OrderController extends Controller
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $order->load(['store', 'details.product', 'payment']),
+            'data' => $order->load(['store', 'details.product', 'details.modifiers', 'payment']),
         ]);
     }
 
@@ -47,7 +47,7 @@ class OrderController extends Controller
             'date' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
-        $query = Order::query()->with(['store', 'details.product', 'payment'])->orderByDesc('order_date');
+        $query = Order::query()->with(['store', 'details.product', 'details.modifiers', 'payment'])->orderByDesc('order_date');
 
         if ($request->filled('store_id')) {
             $query->where('store_id', $request->integer('store_id'));

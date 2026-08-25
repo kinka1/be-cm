@@ -43,7 +43,15 @@
         <tbody>
             @foreach ($order->details as $detail)
                 <tr>
-                    <td style="border-bottom: 1px solid #eee; padding: 8px 0;">{{ $detail->product?->product_name ?? 'Item' }}</td>
+                    <td style="border-bottom: 1px solid #eee; padding: 8px 0;">
+                        {{ $detail->product?->product_name ?? 'Item' }}
+                        @foreach ($detail->modifiers as $modifier)
+                            <div style="font-size: 12px; color: #555;">{{ $modifier->name }} +Rp {{ number_format((float) $modifier->price_delta, 0, ',', '.') }}</div>
+                        @endforeach
+                        @if ($detail->notes)
+                            <div style="font-size: 12px; color: #555;">Note: {{ $detail->notes }}</div>
+                        @endif
+                    </td>
                     <td style="border-bottom: 1px solid #eee; padding: 8px 0; text-align: right;">{{ (float) $detail->quantity }}</td>
                     <td style="border-bottom: 1px solid #eee; padding: 8px 0; text-align: right;">Rp {{ number_format((float) $detail->unit_price, 0, ',', '.') }}</td>
                     <td style="border-bottom: 1px solid #eee; padding: 8px 0; text-align: right;">Rp {{ number_format((float) $detail->subtotal, 0, ',', '.') }}</td>

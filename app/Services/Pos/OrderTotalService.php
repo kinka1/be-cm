@@ -26,13 +26,27 @@ class OrderTotalService
             $product = $products->get($item['product_id']);
             $quantity = (float) $item['quantity'];
             $unitPrice = (float) $product->selling_price;
+            $modifiers = collect($item['modifiers'] ?? [])->map(function (array $modifier) use ($quantity): array {
+                $modifierQuantity = (float) ($modifier['quantity'] ?? 1);
+                $priceDelta = (float) ($modifier['price_delta'] ?? 0);
+
+                return [
+                    'modifier_id' => $modifier['modifier_id'] ?? null,
+                    'name' => $modifier['name'] ?? null,
+                    'price_delta' => $priceDelta,
+                    'quantity' => $modifierQuantity,
+                    'subtotal' => $priceDelta * $modifierQuantity * $quantity,
+                ];
+            })->values();
+            $baseSubtotal = $quantity * $unitPrice;
 
             return [
                 'product' => $product,
                 'product_id' => $product->id,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
-                'subtotal' => $quantity * $unitPrice,
+                'modifiers' => $modifiers,
+                'subtotal' => $baseSubtotal + $modifiers->sum('subtotal'),
                 'notes' => $item['notes'] ?? null,
             ];
         });

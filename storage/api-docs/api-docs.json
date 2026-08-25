@@ -3105,6 +3105,235 @@
                 ]
             }
         },
+        "/api/pos/modifiers": {
+            "get": {
+                "tags": [
+                    "POS Modifiers"
+                ],
+                "summary": "List POS modifiers",
+                "operationId": "39d579e078431d8a06ba453403160b4d",
+                "parameters": [
+                    {
+                        "name": "store_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "POS Modifiers"
+                ],
+                "summary": "Create POS modifier",
+                "operationId": "6d7e271a51a2fae01231e05249c2a334",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "store_id",
+                                    "name",
+                                    "price_delta"
+                                ],
+                                "properties": {
+                                    "store_id": {
+                                        "type": "integer"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Upsize"
+                                    },
+                                    "price_delta": {
+                                        "type": "number",
+                                        "example": 3000
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/modifiers/{modifier}": {
+            "delete": {
+                "tags": [
+                    "POS Modifiers"
+                ],
+                "summary": "Delete POS modifier",
+                "operationId": "186b31b8829635d05b062d9052f91f4b",
+                "parameters": [
+                    {
+                        "name": "modifier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "POS Modifiers"
+                ],
+                "summary": "Update POS modifier",
+                "operationId": "c22a7a226abbc1d9980bd64935dd903c",
+                "parameters": [
+                    {
+                        "name": "modifier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Upsize Large"
+                                    },
+                                    "price_delta": {
+                                        "type": "number",
+                                        "example": 3000
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pos/categories/{category}/modifiers": {
+            "post": {
+                "tags": [
+                    "POS Modifiers"
+                ],
+                "summary": "Assign POS modifier to category",
+                "operationId": "b18667cc795687672c4e2c9e63a81788",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "modifier_id"
+                                ],
+                                "properties": {
+                                    "modifier_id": {
+                                        "type": "integer"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/pos/carts": {
             "get": {
                 "tags": [
@@ -3330,6 +3559,26 @@
                                                 "notes": {
                                                     "type": "string",
                                                     "nullable": true
+                                                },
+                                                "modifiers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "required": [
+                                                            "modifier_id"
+                                                        ],
+                                                        "properties": {
+                                                            "modifier_id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "integer",
+                                                                "example": 1,
+                                                                "maximum": 1
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "maxItems": 1
                                                 }
                                             },
                                             "type": "object"
@@ -6033,6 +6282,10 @@
         {
             "name": "POS Cashier Sessions",
             "description": "POS Cashier Sessions"
+        },
+        {
+            "name": "POS Modifiers",
+            "description": "POS Modifiers"
         },
         {
             "name": "POS Cart",

@@ -13,10 +13,12 @@ class MenuController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $menu = $this->menuQuery($request)->paginate($this->perPage($request));
+
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $this->menuQuery($request)->paginate($this->perPage($request)),
+            'data' => $menu->through(fn (Product $product): array => $this->menuItem($product)),
         ]);
     }
 
@@ -24,12 +26,14 @@ class MenuController extends Controller
     {
         $table = CalonMantu::query()->where('qr_code', $qrCode)->firstOrFail();
 
+        $menu = $this->menuQuery($request, $table->store_id)->paginate($this->perPage($request));
+
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
             'data' => [
                 'table' => $table,
-                'menu' => $this->menuQuery($request, $table->store_id)->paginate($this->perPage($request)),
+                'menu' => $menu->through(fn (Product $product): array => $this->menuItem($product)),
             ],
         ]);
     }
@@ -37,7 +41,9 @@ class MenuController extends Controller
     private function menuQuery(Request $request, ?int $storeId = null): Builder
     {
         $query = Product::query()
+            ->with(['category.categoryModifiers.modifier'])
             ->where('is_active', true)
+            ->where('product_type', 'menu')
             ->orderBy('product_name');
 
         if ($storeId !== null) {
@@ -61,6 +67,27 @@ class MenuController extends Controller
         }
 
         return $query;
+    }
+
+    private function menuItem(Product $product): array
+    {
+        $data = $product->toArray();
+        $categoryModifiers = $product->category?->categoryModifiers ?? collect();
+
+        $data['modifiers'] = $categoryModifiers
+            ->filter(fn ($categoryModifier): bool => (bool) $categoryModifier->is_active && (bool) $categoryModifier->modifier?->is_active)
+            ->map(fn ($categoryModifier): array => [
+                'id' => $categoryModifier->modifier->id,
+                'name' => $categoryModifier->modifier->name,
+                'price_delta' => $categoryModifier->modifier->price_delta,
+                'is_active' => (bool) $categoryModifier->modifier->is_active,
+            ])
+            ->values()
+            ->all();
+
+        unset($data['category']);
+
+        return $data;
     }
 
     private function perPage(Request $request): int

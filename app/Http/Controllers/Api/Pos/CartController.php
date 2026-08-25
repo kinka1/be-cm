@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Pos;
 use App\Http\Controllers\Controller;
 use App\Models\PosCart;
 use App\Models\PosCartItem;
+use App\Models\PosModifier;
 use App\Models\Product;
 use App\Services\Pos\CreateCashierOrderService;
 use Illuminate\Http\JsonResponse;
@@ -193,26 +194,45 @@ class CartController extends Controller
             'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('store_id', $cart->store_id)],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'items.*.notes' => ['nullable', 'string'],
+            'items.*.modifiers' => ['nullable', 'array', 'max:1'],
+            'items.*.modifiers.*.modifier_id' => ['required', 'integer', 'exists:pos_modifiers,id'],
+            'items.*.modifiers.*.quantity' => ['nullable', 'integer', 'min:1', 'max:1'],
         ]);
 
         DB::transaction(function () use ($cart, $data): void {
-            $productIds = collect($data['items'])->pluck('product_id')->all();
+            $normalizedItems = collect($data['items'])
+                ->map(fn (array $item): array => $this->cartItemPayload($cart, $item))
+                ->groupBy(fn (array $item): string => $this->cartItemKey($item))
+                ->map(function ($items): array {
+                    $first = $items->first();
+                    $first['quantity'] = $items->sum('quantity');
+                    return $first;
+                })
+                ->values();
 
-            if ($productIds === []) {
+            if ($normalizedItems->isEmpty()) {
                 $cart->items()->delete();
                 return;
             }
 
-            $cart->items()->whereNotIn('product_id', $productIds)->delete();
+            $cart->items()->delete();
 
-            foreach ($data['items'] as $cartItem) {
-                $cart->items()->updateOrCreate(
-                    ['product_id' => $cartItem['product_id']],
-                    [
-                        'quantity' => $cartItem['quantity'],
-                        'notes' => $cartItem['notes'] ?? null,
-                    ]
-                );
+            foreach ($normalizedItems as $cartItem) {
+                $item = $cart->items()->create([
+                    'product_id' => $cartItem['product_id'],
+                    'quantity' => $cartItem['quantity'],
+                    'notes' => $cartItem['notes'],
+                ]);
+
+                foreach ($cartItem['modifiers'] as $modifier) {
+                    $item->modifiers()->create([
+                        'modifier_id' => $modifier['modifier_id'],
+                        'name' => $modifier['name'],
+                        'price_delta' => $modifier['price_delta'],
+                        'quantity' => $modifier['quantity'],
+                        'subtotal' => (float) $modifier['price_delta'] * (float) $modifier['quantity'] * (float) $cartItem['quantity'],
+                    ]);
+                }
             }
         });
 
@@ -305,10 +325,11 @@ class CartController extends Controller
                 'payment_method' => $data['payment_method'],
                 'amount_paid' => $data['amount_paid'] ?? null,
                 'discount' => $data['discount'] ?? 0,
-                'items' => $cart->items->map(fn (PosCartItem $item) => [
+                'items' => $cart->items->load(['modifiers'])->map(fn (PosCartItem $item) => [
                     'product_id' => $item->product_id,
                     'quantity' => (float) $item->quantity,
                     'notes' => $item->notes,
+                    'modifiers' => $this->orderModifierPayload($item),
                 ])->all(),
             ]);
 
@@ -443,10 +464,11 @@ class CartController extends Controller
                 'payment_method' => $data['payment_method'],
                 'amount_paid' => $data['amount_paid'] ?? null,
                 'discount' => $data['discount'] ?? 0,
-                'items' => $cart->items->map(fn (PosCartItem $item) => [
+                'items' => $cart->items->load(['modifiers'])->map(fn (PosCartItem $item) => [
                     'product_id' => $item->product_id,
                     'quantity' => (float) $item->quantity,
                     'notes' => $item->notes,
+                    'modifiers' => $this->orderModifierPayload($item),
                 ])->all(),
             ]);
 
@@ -472,19 +494,28 @@ class CartController extends Controller
 
     private function cartResponse(PosCart $cart): array
     {
-        $cart->load(['items.product']);
+        $cart->load(['items.product', 'items.modifiers']);
 
         $items = $cart->items->map(function (PosCartItem $item): array {
             $price = (float) $item->product->selling_price;
             $quantity = (float) $item->quantity;
+            $modifiers = $item->modifiers->map(fn ($modifier): array => [
+                'modifier_id' => $modifier->modifier_id,
+                'name' => $modifier->name,
+                'price_delta' => (float) $modifier->price_delta,
+                'quantity' => (int) $modifier->quantity,
+                'subtotal' => (float) $modifier->subtotal,
+            ])->values();
 
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
+                'product_name' => $item->product->product_name,
                 'quantity' => $quantity,
                 'unit_price' => $price,
-                'subtotal' => $price * $quantity,
                 'notes' => $item->notes,
+                'modifiers' => $modifiers,
+                'subtotal' => ($price * $quantity) + $modifiers->sum('subtotal'),
                 'product' => $item->product,
             ];
         })->values();
@@ -521,6 +552,60 @@ class CartController extends Controller
     private function abortIfInactive(PosCart $cart): void
     {
         abort_if($cart->status !== 'active', 422, 'keranjang tidak aktif');
+    }
+
+    private function cartItemPayload(PosCart $cart, array $item): array
+    {
+        $product = Product::query()->with('category')->where('store_id', $cart->store_id)->findOrFail($item['product_id']);
+        $modifiers = collect($item['modifiers'] ?? []);
+        $modifierIds = $modifiers->pluck('modifier_id');
+
+        if ($modifierIds->duplicates()->isNotEmpty()) {
+            abort(422, 'Duplicate modifier tidak diperbolehkan.');
+        }
+
+        $snapshots = $modifiers->map(function (array $modifierItem) use ($cart, $product): array {
+            $modifier = PosModifier::query()
+                ->where('store_id', $cart->store_id)
+                ->where('is_active', true)
+                ->whereHas('categories', fn ($query) => $query
+                    ->where('categories.id', $product->category_id)
+                    ->where('pos_category_modifiers.is_active', true))
+                ->find($modifierItem['modifier_id']);
+
+            if (!$modifier) {
+                abort(422, 'Modifier tidak tersedia untuk produk ini.');
+            }
+
+            return [
+                'modifier_id' => $modifier->id,
+                'name' => $modifier->name,
+                'price_delta' => (float) $modifier->price_delta,
+                'quantity' => (int) ($modifierItem['quantity'] ?? 1),
+            ];
+        })->values()->all();
+
+        return [
+            'product_id' => $product->id,
+            'quantity' => (float) $item['quantity'],
+            'notes' => $item['notes'] ?? null,
+            'modifiers' => $snapshots,
+        ];
+    }
+
+    private function cartItemKey(array $item): string
+    {
+        return $item['product_id'].'|'.($item['notes'] ?? '').'|'.collect($item['modifiers'])->pluck('modifier_id')->sort()->implode(',');
+    }
+
+    private function orderModifierPayload(PosCartItem $item): array
+    {
+        return $item->modifiers->map(fn ($modifier): array => [
+            'modifier_id' => $modifier->modifier_id,
+            'name' => $modifier->name,
+            'price_delta' => (float) $modifier->price_delta,
+            'quantity' => (int) $modifier->quantity,
+        ])->values()->all();
     }
 
     private function authorizeItem(Request $request, PosCartItem $item): void

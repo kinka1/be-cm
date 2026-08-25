@@ -4,6 +4,7 @@ namespace App\Services\Pos;
 
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\OrderDetailModifier;
 use App\Models\Payment;
 use App\Models\CalonMantu;
 use App\Models\CashierSession;
@@ -74,7 +75,7 @@ class CreateCashierOrderService
             ]);
 
             foreach ($totals['details'] as $detail) {
-                OrderDetail::create([
+                $orderDetail = OrderDetail::create([
                     'order_id' => $order->id,
                     'product_id' => $detail['product_id'],
                     'quantity' => $detail['quantity'],
@@ -83,6 +84,17 @@ class CreateCashierOrderService
                     'notes' => $detail['notes'],
                     'created_at' => now(),
                 ]);
+
+                foreach ($detail['modifiers'] ?? [] as $modifier) {
+                    OrderDetailModifier::create([
+                        'order_detail_id' => $orderDetail->id,
+                        'modifier_id' => $modifier['modifier_id'] ?? null,
+                        'name' => $modifier['name'],
+                        'price_delta' => $modifier['price_delta'],
+                        'quantity' => $modifier['quantity'],
+                        'subtotal' => $modifier['subtotal'],
+                    ]);
+                }
             }
 
             $amountPaid = $data['payment_method'] === 'cash'
@@ -102,7 +114,7 @@ class CreateCashierOrderService
 
             $this->stockDeductionService->deduct($order);
 
-            return $order->load(['details.product', 'payment']);
+            return $order->load(['details.product', 'details.modifiers', 'payment']);
         });
     }
 

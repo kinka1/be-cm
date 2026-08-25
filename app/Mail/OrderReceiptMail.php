@@ -15,7 +15,7 @@ class OrderReceiptMail extends Mailable
 
     public function __construct(public Order $order)
     {
-        $this->order->loadMissing(['store', 'details.product', 'payment']);
+        $this->order->loadMissing(['store', 'details.product', 'details.modifiers', 'payment']);
     }
 
     public function envelope(): Envelope
