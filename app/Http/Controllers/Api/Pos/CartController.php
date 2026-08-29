@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Pos;
 
 use App\Http\Controllers\Controller;
+use App\Models\CheckoutRequest;
 use App\Models\PosCart;
 use App\Models\PosCartItem;
 use App\Models\PosModifier;
@@ -12,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class CartController extends Controller
 {
@@ -124,7 +127,7 @@ class CartController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $item = $cart->items()->where('product_id', $data['product_id'])->first();
+        $item = $cart->items()->where('product_id', $data['product_id'])->whereDoesntHave('modifiers')->first();
 
         if ($item) {
             $item->update([
@@ -159,7 +162,11 @@ class CartController extends Controller
 
         DB::transaction(function () use ($cart, $data): void {
             foreach ($data['items'] as $cartItem) {
-                $item = $cart->items()->where('product_id', $cartItem['product_id'])->lockForUpdate()->first();
+                $item = $cart->items()
+                    ->where('product_id', $cartItem['product_id'])
+                    ->whereDoesntHave('modifiers')
+                    ->lockForUpdate()
+                    ->first();
 
                 if ($item) {
                     $item->update([
@@ -302,48 +309,10 @@ class CartController extends Controller
             'payment_method' => ['required', 'in:cash,qris,transfer'],
             'amount_paid' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
+            'idempotency_key' => ['required', 'string', 'max:255'],
         ]);
 
-        $employeeId = $request->user()?->employee_id;
-        if (!$employeeId) {
-            return response()->json(['status' => 'gagal', 'message' => 'user belum terhubung ke employee', 'data' => null], 422);
-        }
-
-        $cart->load('items');
-        if ($cart->items->isEmpty()) {
-            return response()->json(['status' => 'gagal', 'message' => 'keranjang kosong', 'data' => null], 422);
-        }
-
-        $order = DB::transaction(function () use ($service, $cart, $data, $employeeId) {
-            $order = $service->create([
-                'order_type' => $data['order_type'],
-                'store_id' => $cart->store_id,
-                'table_id' => $data['table_id'] ?? null,
-                'table_label' => $data['table_label'] ?? null,
-                'employee_id' => $employeeId,
-                'customer_name' => $data['customer_name'] ?? $cart->name,
-                'payment_method' => $data['payment_method'],
-                'amount_paid' => $data['amount_paid'] ?? null,
-                'discount' => $data['discount'] ?? 0,
-                'items' => $cart->items->load(['modifiers'])->map(fn (PosCartItem $item) => [
-                    'product_id' => $item->product_id,
-                    'quantity' => (float) $item->quantity,
-                    'notes' => $item->notes,
-                    'modifiers' => $this->orderModifierPayload($item),
-                ])->all(),
-            ]);
-
-            $cart->items()->delete();
-            $cart->update(['status' => 'checked_out']);
-
-            return $order;
-        });
-
-        return response()->json([
-            'status' => 'sukses',
-            'message' => 'checked out',
-            'data' => $order,
-        ], 201);
+        return $this->checkoutWithIdempotency($request, $cart, $service, $data, true);
     }
 
     public function addItem(Request $request): JsonResponse
@@ -356,7 +325,7 @@ class CartController extends Controller
         ]);
 
         $cart = $this->cart($request, (int) $data['store_id']);
-        $item = $cart->items()->where('product_id', $data['product_id'])->first();
+        $item = $cart->items()->where('product_id', $data['product_id'])->whereDoesntHave('modifiers')->first();
 
         if ($item) {
             $item->update([
@@ -439,49 +408,146 @@ class CartController extends Controller
             'payment_method' => ['required', 'in:cash,qris,transfer'],
             'amount_paid' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
+            'idempotency_key' => ['required', 'string', 'max:255'],
         ]);
 
+        $cart = $this->cart($request, (int) $data['store_id']);
+
+        return $this->checkoutWithIdempotency($request, $cart, $service, $data, false);
+    }
+
+    private function checkoutWithIdempotency(Request $request, PosCart $cart, CreateCashierOrderService $service, array $data, bool $markCartCheckedOut): JsonResponse
+    {
         $employeeId = $request->user()?->employee_id;
+
         if (!$employeeId) {
             return response()->json(['status' => 'gagal', 'message' => 'user belum terhubung ke employee', 'data' => null], 422);
         }
 
-        $cart = $this->cart($request, (int) $data['store_id']);
-        $cart->load('items');
+        $initial = DB::transaction(function () use ($request, $cart, $data, $employeeId): array {
+            $lockedCart = PosCart::query()->whereKey($cart->id)->lockForUpdate()->firstOrFail();
+            $this->authorizeCart($request, $lockedCart);
 
-        if ($cart->items->isEmpty()) {
-            return response()->json(['status' => 'gagal', 'message' => 'keranjang kosong', 'data' => null], 422);
+            $checkoutRequest = CheckoutRequest::query()
+                ->where('store_id', $lockedCart->store_id)
+                ->where('user_id', $request->user()->id)
+                ->where('idempotency_key', $data['idempotency_key'])
+                ->lockForUpdate()
+                ->first();
+
+            $requestHash = $this->checkoutRequestHash($lockedCart, $data, $employeeId);
+
+            if ($checkoutRequest) {
+                if ($checkoutRequest->request_hash !== $requestHash) {
+                    throw ValidationException::withMessages(['idempotency_key' => ['Idempotency key sudah dipakai untuk payload checkout yang berbeda.']]);
+                }
+
+                if ($checkoutRequest->status === 'success' && $checkoutRequest->order_id) {
+                    return [
+                        'status' => 200,
+                        'order' => $checkoutRequest->order->load(['details.product', 'details.modifiers', 'payment']),
+                        'checkout_request_id' => $checkoutRequest->id,
+                    ];
+                }
+
+                if ($checkoutRequest->status === 'processing') {
+                    return ['status' => 409, 'order' => null, 'checkout_request_id' => $checkoutRequest->id];
+                }
+
+                $checkoutRequest->update(['status' => 'processing', 'error_message' => null]);
+            } else {
+                $checkoutRequest = CheckoutRequest::query()->create([
+                    'store_id' => $lockedCart->store_id,
+                    'cart_id' => $lockedCart->id,
+                    'user_id' => $request->user()->id,
+                    'idempotency_key' => $data['idempotency_key'],
+                    'status' => 'processing',
+                    'request_hash' => $requestHash,
+                ]);
+            }
+
+            return ['status' => 201, 'order' => null, 'checkout_request_id' => $checkoutRequest->id];
+        });
+
+        if ($initial['status'] === 409) {
+            return response()->json(['status' => 'gagal', 'message' => 'checkout sedang diproses', 'data' => null], 409);
         }
 
-        $order = DB::transaction(function () use ($service, $cart, $data, $employeeId) {
-            $order = $service->create([
-                'order_type' => $data['order_type'],
-                'store_id' => $data['store_id'],
-                'table_id' => $data['table_id'] ?? null,
-                'table_label' => $data['table_label'] ?? null,
-                'employee_id' => $employeeId,
-                'customer_name' => $data['customer_name'] ?? null,
-                'payment_method' => $data['payment_method'],
-                'amount_paid' => $data['amount_paid'] ?? null,
-                'discount' => $data['discount'] ?? 0,
-                'items' => $cart->items->load(['modifiers'])->map(fn (PosCartItem $item) => [
-                    'product_id' => $item->product_id,
-                    'quantity' => (float) $item->quantity,
-                    'notes' => $item->notes,
-                    'modifiers' => $this->orderModifierPayload($item),
-                ])->all(),
-            ]);
+        if ($initial['status'] === 200) {
+            return response()->json(['status' => 'sukses', 'message' => 'ok', 'data' => $initial['order']]);
+        }
 
-            $cart->items()->delete();
+        try {
+            $result = DB::transaction(function () use ($request, $cart, $service, $data, $employeeId, $markCartCheckedOut, $initial): array {
+                $checkoutRequest = CheckoutRequest::query()->whereKey($initial['checkout_request_id'])->lockForUpdate()->firstOrFail();
 
-            return $order;
-        });
+                if ($checkoutRequest->status === 'success' && $checkoutRequest->order_id) {
+                    return [
+                        'status' => 200,
+                        'order' => $checkoutRequest->order->load(['details.product', 'details.modifiers', 'payment']),
+                    ];
+                }
+
+                $lockedCart = PosCart::query()->whereKey($cart->id)->lockForUpdate()->firstOrFail();
+                $this->authorizeCart($request, $lockedCart);
+                $lockedCart->load(['items.product', 'items.modifiers']);
+
+                if ($lockedCart->status !== 'active') {
+                    throw ValidationException::withMessages(['cart' => ['keranjang sudah checkout atau tidak aktif']]);
+                }
+
+                if ($lockedCart->items->isEmpty()) {
+                    throw ValidationException::withMessages(['cart' => ['keranjang kosong']]);
+                }
+
+                $order = $service->create([
+                    'order_type' => $data['order_type'],
+                    'store_id' => $lockedCart->store_id,
+                    'table_id' => $data['table_id'] ?? null,
+                    'table_label' => $data['table_label'] ?? null,
+                    'employee_id' => $employeeId,
+                    'customer_name' => $data['customer_name'] ?? ($markCartCheckedOut ? $lockedCart->name : null),
+                    'payment_method' => $data['payment_method'],
+                    'amount_paid' => $data['amount_paid'] ?? null,
+                    'discount' => $data['discount'] ?? 0,
+                    'items' => $lockedCart->items->map(fn (PosCartItem $item) => [
+                        'product_id' => $item->product_id,
+                        'quantity' => (float) $item->quantity,
+                        'notes' => $item->notes,
+                        'modifiers' => $this->orderModifierPayload($item),
+                    ])->all(),
+                ]);
+
+                $lockedCart->items()->delete();
+
+                if ($markCartCheckedOut) {
+                    $lockedCart->update(['status' => 'checked_out']);
+                }
+
+                $checkoutRequest->update([
+                    'order_id' => $order->id,
+                    'status' => 'success',
+                    'error_message' => null,
+                ]);
+
+                return ['status' => 201, 'order' => $order];
+            });
+        } catch (Throwable $exception) {
+            CheckoutRequest::query()
+                ->whereKey($initial['checkout_request_id'])
+                ->update([
+                    'status' => 'failed',
+                    'error_message' => $exception->getMessage(),
+                ]);
+
+            throw $exception;
+        }
 
         return response()->json([
             'status' => 'sukses',
-            'message' => 'checked out',
-            'data' => $order,
-        ], 201);
+            'message' => $result['status'] === 200 ? 'ok' : 'checked out',
+            'data' => $result['order'],
+        ], $result['status']);
     }
 
     private function cart(Request $request, int $storeId): PosCart
@@ -532,6 +598,24 @@ class CartController extends Controller
         ];
     }
 
+    private function checkoutRequestHash(PosCart $cart, array $data, int $employeeId): string
+    {
+        $payload = [
+            'cart_id' => $cart->id,
+            'store_id' => $cart->store_id,
+            'employee_id' => $employeeId,
+            'order_type' => $data['order_type'],
+            'table_id' => $data['table_id'] ?? null,
+            'table_label' => $data['table_label'] ?? null,
+            'customer_name' => $data['customer_name'] ?? null,
+            'payment_method' => $data['payment_method'],
+            'amount_paid' => $data['amount_paid'] ?? null,
+            'discount' => $data['discount'] ?? 0,
+        ];
+
+        return hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR));
+    }
+
     private function authorizeCart(Request $request, PosCart $cart): void
     {
         abort_if($cart->user_id !== $request->user()->id, 404);
@@ -561,7 +645,7 @@ class CartController extends Controller
         $modifierIds = $modifiers->pluck('modifier_id');
 
         if ($modifierIds->duplicates()->isNotEmpty()) {
-            abort(422, 'Duplicate modifier tidak diperbolehkan.');
+            throw ValidationException::withMessages(['items' => ['Duplicate modifier tidak diperbolehkan.']]);
         }
 
         $snapshots = $modifiers->map(function (array $modifierItem) use ($cart, $product): array {
@@ -574,7 +658,7 @@ class CartController extends Controller
                 ->find($modifierItem['modifier_id']);
 
             if (!$modifier) {
-                abort(422, 'Modifier tidak tersedia untuk produk ini.');
+                throw ValidationException::withMessages(['items' => ['Modifier tidak tersedia untuk produk ini.']]);
             }
 
             return [

@@ -42,18 +42,19 @@ class CreateCashierOrderService
             throw ValidationException::withMessages(['amount_paid' => ['Jumlah pembayaran kurang dari total order']]);
         }
 
-        $cashierSession = CashierSession::query()
-            ->where('store_id', $data['store_id'])
-            ->where('employee_id', $data['employee_id'])
-            ->where('status', 'open')
-            ->latest('opened_at')
-            ->first();
+        return DB::transaction(function () use ($data, $totals) {
+            $cashierSession = CashierSession::query()
+                ->where('store_id', $data['store_id'])
+                ->where('employee_id', $data['employee_id'])
+                ->where('status', 'open')
+                ->latest('opened_at')
+                ->lockForUpdate()
+                ->first();
 
-        if (!$cashierSession) {
-            throw ValidationException::withMessages(['cashier_session' => ['Operator belum membuka kasir untuk toko ini']]);
-        }
+            if (!$cashierSession) {
+                throw ValidationException::withMessages(['cashier_session' => ['Operator belum membuka kasir untuk toko ini']]);
+            }
 
-        return DB::transaction(function () use ($data, $totals, $cashierSession) {
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
                 'store_id' => $data['store_id'],

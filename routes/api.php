@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssetSummaryController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\EmployeeStoreAccessController;
 use App\Http\Controllers\Api\IngredientImportController;
 use App\Http\Controllers\Api\IngredientStockController;
 use App\Http\Controllers\Api\MenuImportController;
@@ -77,6 +78,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('stores', StoreController::class);
+    Route::get('employees/{employee}/stores', [EmployeeStoreAccessController::class, 'index']);
+    Route::put('employees/{employee}/stores', [EmployeeStoreAccessController::class, 'sync']);
+    Route::post('employees/{employee}/stores/{store}', [EmployeeStoreAccessController::class, 'attach']);
+    Route::delete('employees/{employee}/stores/{store}', [EmployeeStoreAccessController::class, 'detach']);
     Route::apiResource('employees', EmployeeController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::get('products/deleted', [ProductController::class, 'deleted']);
@@ -159,6 +164,7 @@ Route::prefix('pos')->group(function () {
         Route::post('cashier-sessions/{cashierSession}/cash-movements', [CashierSessionController::class, 'addCashMovement']);
         Route::post('cashier-sessions/{cashierSession}/close', [CashierSessionController::class, 'close']);
         Route::get('cashier-sessions/{cashierSession}/summary', [CashierSessionController::class, 'summary']);
+        Route::get('cashier-sessions/{cashierSession}/print-summary', [CashierSessionController::class, 'printSummary']);
         Route::get('cashier-sessions/{cashierSession}/orders', [CashierSessionController::class, 'orders']);
         Route::get('cashier-sessions/{cashierSession}/cash-movements', [CashierSessionController::class, 'cashMovements']);
         Route::post('cashier-orders', [CashierOrderController::class, 'store']);

@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transactions_after_insert');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_orders_after_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_orders_before_insert');
@@ -108,6 +112,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::unprepared('DROP TRIGGER IF EXISTS trg_stock_transactions_after_insert');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_orders_after_update');
         DB::unprepared('DROP TRIGGER IF EXISTS trg_orders_before_insert');

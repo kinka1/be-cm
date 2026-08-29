@@ -12,6 +12,10 @@ class CategoryController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $request->validate([
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
         $query = Category::query()->orderBy('id');
 
         if ($request->filled('store_id')) {
@@ -21,7 +25,7 @@ class CategoryController extends Controller
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $query->get(),
+            'data' => $query->paginate($request->integer('per_page', 15)),
         ]);
     }
 

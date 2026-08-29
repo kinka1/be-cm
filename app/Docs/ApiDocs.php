@@ -144,7 +144,7 @@ class ApiDocs
     {
     }
 
-    #[OA\Get(path: '/api/employees', summary: 'List employees', tags: ['Employees'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'role_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/employees', summary: 'List employees', description: 'Paginated employee list. Each employee item includes username and current_store_name from the linked user account when available. store_id filters employees assigned to that store via employee_store.', tags: ['Employees'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, description: 'Filter employees assigned to this store.', schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'role_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string'))], responses: [new OA\Response(response: 200, description: 'OK. Response data is paginated and data.data[] contains username and current_store_name.' )])]
     public function listEmployees(): void
     {
     }
@@ -198,6 +198,26 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/employees/{employee}/stores', summary: 'List employee store access', description: 'Admin/SPV only. Returns stores assigned to an employee and the user current active store.', security: [['BearerAuth' => []]], tags: ['Employees'], parameters: [new OA\Parameter(name: 'employee', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 403, description: 'Admin/SPV only')])]
+    public function listEmployeeStores(): void
+    {
+    }
+
+    #[OA\Put(path: '/api/employees/{employee}/stores', summary: 'Sync employee store access', description: 'Admin/SPV only. Replaces all store access for the employee. current_store_id must be included in store_ids when sent.', security: [['BearerAuth' => []]], tags: ['Employees'], parameters: [new OA\Parameter(name: 'employee', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_ids'], properties: [new OA\Property(property: 'store_ids', type: 'array', items: new OA\Items(type: 'integer'), example: [1, 3]), new OA\Property(property: 'current_store_id', type: 'integer', nullable: true, example: 3)], type: 'object')), responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 403, description: 'Admin/SPV only'), new OA\Response(response: 422, description: 'Validation error')])]
+    public function syncEmployeeStores(): void
+    {
+    }
+
+    #[OA\Post(path: '/api/employees/{employee}/stores/{store}', summary: 'Assign one store to employee', description: 'Admin/SPV only. Adds one store access without removing existing stores.', security: [['BearerAuth' => []]], tags: ['Employees'], parameters: [new OA\Parameter(name: 'employee', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'store', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 403, description: 'Admin/SPV only'), new OA\Response(response: 404, description: 'Not found')])]
+    public function assignEmployeeStore(): void
+    {
+    }
+
+    #[OA\Delete(path: '/api/employees/{employee}/stores/{store}', summary: 'Remove one store from employee', description: 'Admin/SPV only. Removes one store access. If removed store is the employee current store, current_store_id is moved to the first remaining store or null.', security: [['BearerAuth' => []]], tags: ['Employees'], parameters: [new OA\Parameter(name: 'employee', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'store', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'Updated'), new OA\Response(response: 403, description: 'Admin/SPV only'), new OA\Response(response: 404, description: 'Not found')])]
+    public function removeEmployeeStore(): void
+    {
+    }
+
     #[OA\Get(path: '/api/attendances', summary: 'List attendances', security: [['BearerAuth' => []]], tags: ['Attendances'], parameters: [new OA\Parameter(name: 'employee_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['hadir', 'izin', 'sakit', 'alpha'])), new OA\Parameter(name: 'from_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')), new OA\Parameter(name: 'to_date', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')), new OA\Parameter(name: 'search', in: 'query', required: false, schema: new OA\Schema(type: 'string')), new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function listAttendances(): void
     {
@@ -243,7 +263,7 @@ class ApiDocs
     {
     }
 
-    #[OA\Get(path: '/api/categories', summary: 'List categories', tags: ['Categories'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/categories', summary: 'List categories', description: 'Paginated category list.', tags: ['Categories'], parameters: [new OA\Parameter(name: 'store_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)), new OA\Parameter(name: 'per_page', in: 'query', required: false, description: 'Items per page. Min 1, max 100, default 15.', schema: new OA\Schema(type: 'integer', example: 15))], responses: [new OA\Response(response: 200, description: 'OK. Data is a Laravel paginated response.'), new OA\Response(response: 422, description: 'Validation error')])]
     public function listCategories(): void
     {
     }
@@ -565,6 +585,11 @@ class ApiDocs
     {
     }
 
+    #[OA\Get(path: '/api/pos/cashier-sessions/{id}/print-summary', summary: 'Get fresh cashier session print summary', description: 'Returns fresh session metadata, sales summary, paid orders, and cash movements for the selected session.', security: [['BearerAuth' => []]], tags: ['POS Cashier Sessions'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK'), new OA\Response(response: 403, description: 'Unauthorized store access')])]
+    public function cashierSessionPrintSummary(): void
+    {
+    }
+
     #[OA\Get(path: '/api/pos/cashier-sessions/{id}/orders', summary: 'List cashier session orders', security: [['BearerAuth' => []]], tags: ['POS Cashier Sessions'], parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function cashierSessionOrders(): void
     {
@@ -660,7 +685,7 @@ class ApiDocs
     {
     }
 
-    #[OA\Post(path: '/api/pos/carts/{cart}/checkout', summary: 'Checkout named POS cart', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_type', 'payment_method'], properties: [new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'table_id', type: 'integer', description: 'Optional legacy table relation to calon_mantu.id'), new OA\Property(property: 'table_label', type: 'string', description: 'Free text table label without database relation, e.g. Meja 01'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Checked out'), new OA\Response(response: 422, description: 'Empty cart or validation error')])]
+    #[OA\Post(path: '/api/pos/carts/{cart}/checkout', summary: 'Checkout named POS cart', description: 'idempotency_key is required. Retry with the same key and same payload returns the same order. Same key with different payload returns 422.', security: [['BearerAuth' => []]], tags: ['POS Cart'], parameters: [new OA\Parameter(name: 'cart', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['order_type', 'payment_method', 'idempotency_key'], properties: [new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'table_id', type: 'integer', description: 'Optional legacy table relation to calon_mantu.id'), new OA\Property(property: 'table_label', type: 'string', description: 'Free text table label without database relation, e.g. Meja 01'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number'), new OA\Property(property: 'idempotency_key', type: 'string', example: '0b7d9b6e-78da-4e7c-99f3-d93244ed4f61')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Checked out'), new OA\Response(response: 200, description: 'Same idempotency key returned existing order'), new OA\Response(response: 409, description: 'Checkout is still processing'), new OA\Response(response: 422, description: 'Empty cart, different payload, or validation error')])]
     public function checkoutNamedPosCart(): void
     {
     }
@@ -690,7 +715,7 @@ class ApiDocs
     {
     }
 
-    #[OA\Post(path: '/api/pos/cart/checkout', summary: 'Checkout POS cart into cashier order', security: [['BearerAuth' => []]], tags: ['POS Cart'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'order_type', 'payment_method'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'table_id', type: 'integer', description: 'Optional legacy table relation to calon_mantu.id'), new OA\Property(property: 'table_label', type: 'string', description: 'Free text table label without database relation, e.g. Meja 01'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Checked out'), new OA\Response(response: 422, description: 'Empty cart or validation error')])]
+    #[OA\Post(path: '/api/pos/cart/checkout', summary: 'Checkout POS cart into cashier order', description: 'idempotency_key is required. Retry with the same key and same payload returns the same order. Same key with different payload returns 422.', security: [['BearerAuth' => []]], tags: ['POS Cart'], requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['store_id', 'order_type', 'payment_method', 'idempotency_key'], properties: [new OA\Property(property: 'store_id', type: 'integer'), new OA\Property(property: 'order_type', type: 'string', enum: ['dine_in_cashier', 'takeaway']), new OA\Property(property: 'table_id', type: 'integer', description: 'Optional legacy table relation to calon_mantu.id'), new OA\Property(property: 'table_label', type: 'string', description: 'Free text table label without database relation, e.g. Meja 01'), new OA\Property(property: 'customer_name', type: 'string'), new OA\Property(property: 'payment_method', type: 'string', enum: ['cash', 'qris', 'transfer']), new OA\Property(property: 'amount_paid', type: 'number'), new OA\Property(property: 'discount', type: 'number'), new OA\Property(property: 'idempotency_key', type: 'string', example: '0b7d9b6e-78da-4e7c-99f3-d93244ed4f61')], type: 'object')), responses: [new OA\Response(response: 201, description: 'Checked out'), new OA\Response(response: 200, description: 'Same idempotency key returned existing order'), new OA\Response(response: 409, description: 'Checkout is still processing'), new OA\Response(response: 422, description: 'Empty cart, different payload, or validation error')])]
     public function checkoutPosCart(): void
     {
     }

@@ -141,7 +141,48 @@ class CashierSessionController extends Controller
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $cashierSession->orders()->with(['details.product', 'payment'])->orderByDesc('order_date')->paginate($request->integer('per_page', 15)),
+            'data' => $cashierSession->orders()->with(['details.product', 'details.modifiers', 'payment'])->orderByDesc('order_date')->paginate($request->integer('per_page', 15)),
+        ]);
+    }
+
+    public function printSummary(CashierSession $cashierSession): JsonResponse
+    {
+        $cashierSession->load(['store', 'employee']);
+        $summary = $this->summaryData($cashierSession);
+
+        return response()->json([
+            'status' => 'sukses',
+            'message' => 'ok',
+            'data' => [
+                'session' => [
+                    'id' => $cashierSession->id,
+                    'store_id' => $cashierSession->store_id,
+                    'store_name' => $cashierSession->store?->store_name,
+                    'employee_id' => $cashierSession->employee_id,
+                    'employee_name' => $cashierSession->employee?->full_name,
+                    'status' => $cashierSession->status,
+                    'opened_at' => $cashierSession->opened_at,
+                    'closed_at' => $cashierSession->closed_at,
+                ],
+                'summary' => [
+                    'opening_cash' => $summary['opening_cash'],
+                    'cash_sales' => $summary['cash_sales'],
+                    'qris_sales' => $summary['qris_sales'],
+                    'transfer_sales' => $summary['transfer_sales'],
+                    'cash_in' => $summary['cash_in'],
+                    'cash_out' => $summary['cash_out'],
+                    'expected_closing_cash' => $summary['expected_cash'],
+                    'closing_cash' => $summary['closing_cash'],
+                    'cash_difference' => $summary['cash_difference'],
+                    'total_orders' => $summary['total_orders'],
+                ],
+                'orders' => $cashierSession->orders()
+                    ->with(['details.product', 'details.modifiers', 'payment'])
+                    ->where('payment_status', 'paid')
+                    ->orderBy('order_date')
+                    ->get(),
+                'cash_movements' => $cashierSession->cashMovements()->orderBy('created_at')->get(),
+            ],
         ]);
     }
 

@@ -16,14 +16,16 @@ class EmployeeController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Employee::query()->orderBy('id');
+        $query = Employee::query()
+            ->with('user:id,employee_id,username,current_store_id', 'user.currentStore')
+            ->orderBy('id');
 
         if ($request->filled('role_id')) {
             $query->where('role_id', $request->integer('role_id'));
         }
 
         if ($request->filled('store_id')) {
-            $query->where('store_id', $request->integer('store_id'));
+            $query->whereHas('stores', fn ($stores) => $stores->where('stores.id', $request->integer('store_id')));
         }
 
         if ($request->filled('status')) {
@@ -38,10 +40,19 @@ class EmployeeController extends Controller
             });
         }
 
+        $employees = $query->paginate(15);
+        $employees->getCollection()->transform(function (Employee $employee): Employee {
+            $employee->setAttribute('username', $employee->user?->username);
+            $employee->setAttribute('current_store_name', $employee->user?->currentStore?->store_name);
+            $employee->user?->unsetRelation('currentStore');
+
+            return $employee;
+        });
+
         return response()->json([
             'status' => 'sukses',
             'message' => 'ok',
-            'data' => $query->paginate(15),
+            'data' => $employees,
         ]);
     }
 
