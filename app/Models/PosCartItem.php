@@ -10,7 +10,10 @@ class PosCartItem extends Model
 {
     protected $fillable = [
         'pos_cart_id',
+        'item_type',
         'product_id',
+        'custom_name',
+        'custom_unit_price',
         'quantity',
         'notes',
     ];

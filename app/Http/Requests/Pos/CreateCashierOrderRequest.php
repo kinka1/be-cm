@@ -23,7 +23,10 @@ class CreateCashierOrderRequest extends FormRequest
             'amount_paid' => ['required_if:payment_method,cash', 'nullable', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.type' => ['nullable', 'in:menu,custom'],
+            'items.*.product_id' => ['required_if:items.*.type,menu', 'nullable', 'integer', 'exists:products,id'],
+            'items.*.custom_name' => ['required_if:items.*.type,custom', 'nullable', 'string', 'max:255'],
+            'items.*.unit_price' => ['required_if:items.*.type,custom', 'nullable', 'numeric', 'min:0'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'items.*.notes' => ['nullable', 'string'],
         ];

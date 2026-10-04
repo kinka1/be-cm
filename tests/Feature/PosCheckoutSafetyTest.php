@@ -243,6 +243,119 @@ class PosCheckoutSafetyTest extends TestCase
         $this->getJson("/api/pos/cashier-sessions/{$otherSession->id}/print-summary")->assertForbidden();
     }
 
+    public function test_cart_sync_custom_item_creates_cart_line(): void
+    {
+        $context = $this->posContext();
+        Sanctum::actingAs($context['user']);
+        $cart = PosCart::query()->create(['user_id' => $context['user']->id, 'store_id' => $context['store']->id, 'name' => 'Cart', 'status' => 'active']);
+
+        $this->putJson("/api/pos/carts/{$cart->id}/items", [
+            'items' => [
+                ['type' => 'custom', 'custom_name' => 'Menu custom', 'unit_price' => 25000, 'quantity' => 1, 'notes' => 'Manual'],
+            ],
+        ])->assertOk()->assertJsonPath('data.items.0.type', 'custom');
+
+        $this->assertDatabaseHas('pos_cart_items', [
+            'pos_cart_id' => $cart->id,
+            'item_type' => 'custom',
+            'custom_name' => 'Menu custom',
+            'custom_unit_price' => 25000,
+        ]);
+    }
+
+    public function test_cart_sync_merges_same_custom_items(): void
+    {
+        $context = $this->posContext();
+        Sanctum::actingAs($context['user']);
+        $cart = PosCart::query()->create(['user_id' => $context['user']->id, 'store_id' => $context['store']->id, 'name' => 'Cart', 'status' => 'active']);
+
+        $this->putJson("/api/pos/carts/{$cart->id}/items", [
+            'items' => [
+                ['type' => 'custom', 'custom_name' => 'Tambahan sambal', 'unit_price' => 3000, 'quantity' => 1],
+                ['type' => 'custom', 'custom_name' => 'Tambahan sambal', 'unit_price' => 3000, 'quantity' => 2],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseCount('pos_cart_items', 1);
+        $this->assertSame('3.00', DB::table('pos_cart_items')->value('quantity'));
+    }
+
+    public function test_cart_sync_same_custom_name_with_different_price_creates_separate_lines(): void
+    {
+        $context = $this->posContext();
+        Sanctum::actingAs($context['user']);
+        $cart = PosCart::query()->create(['user_id' => $context['user']->id, 'store_id' => $context['store']->id, 'name' => 'Cart', 'status' => 'active']);
+
+        $this->putJson("/api/pos/carts/{$cart->id}/items", [
+            'items' => [
+                ['type' => 'custom', 'custom_name' => 'Manual charge', 'unit_price' => 3000, 'quantity' => 1],
+                ['type' => 'custom', 'custom_name' => 'Manual charge', 'unit_price' => 5000, 'quantity' => 1],
+            ],
+        ])->assertOk();
+
+        $this->assertDatabaseCount('pos_cart_items', 2);
+    }
+
+    public function test_cart_sync_custom_item_with_modifier_is_rejected(): void
+    {
+        $context = $this->posContext();
+        Sanctum::actingAs($context['user']);
+        $modifier = $this->modifierFor($context['store'], $context['category'], 'Upsize');
+        $cart = PosCart::query()->create(['user_id' => $context['user']->id, 'store_id' => $context['store']->id, 'name' => 'Cart', 'status' => 'active']);
+
+        $this->putJson("/api/pos/carts/{$cart->id}/items", [
+            'items' => [
+                ['type' => 'custom', 'custom_name' => 'Manual charge', 'unit_price' => 3000, 'quantity' => 1, 'modifiers' => [['modifier_id' => $modifier->id, 'quantity' => 1]]],
+            ],
+        ])->assertUnprocessable();
+    }
+
+    public function test_checkout_custom_item_creates_order_detail_without_product_and_no_stock_transaction(): void
+    {
+        $context = $this->posContext();
+        Sanctum::actingAs($context['user']);
+        $cart = PosCart::query()->create(['user_id' => $context['user']->id, 'store_id' => $context['store']->id, 'name' => 'Cart', 'status' => 'active']);
+
+        $this->putJson("/api/pos/carts/{$cart->id}/items", [
+            'items' => [
+                ['type' => 'custom', 'custom_name' => 'Menu custom', 'unit_price' => 25000, 'quantity' => 1],
+            ],
+        ])->assertOk();
+
+        $this->postJson("/api/pos/carts/{$cart->id}/checkout", [
+            'order_type' => 'dine_in_cashier',
+            'payment_method' => 'cash',
+            'amount_paid' => 30000,
+            'idempotency_key' => 'custom-checkout',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('order_details', ['item_type' => 'custom', 'item_name' => 'Menu custom', 'product_id' => null]);
+        $this->assertDatabaseCount('stock_transactions', 0);
+    }
+
+    public function test_checkout_mixed_menu_and_custom_total_is_correct(): void
+    {
+        $context = $this->posContext();
+        Sanctum::actingAs($context['user']);
+        $cart = PosCart::query()->create(['user_id' => $context['user']->id, 'store_id' => $context['store']->id, 'name' => 'Cart', 'status' => 'active']);
+
+        $this->putJson("/api/pos/carts/{$cart->id}/items", [
+            'items' => [
+                ['type' => 'menu', 'product_id' => $context['product']->id, 'quantity' => 1],
+                ['type' => 'custom', 'custom_name' => 'Menu custom', 'unit_price' => 25000, 'quantity' => 2],
+            ],
+        ])->assertOk();
+
+        $response = $this->postJson("/api/pos/carts/{$cart->id}/checkout", [
+            'order_type' => 'dine_in_cashier',
+            'payment_method' => 'cash',
+            'amount_paid' => 70000,
+            'idempotency_key' => 'mixed-checkout',
+        ])->assertCreated();
+
+        $this->assertSame('60000.00', $response->json('data.total_amount'));
+    }
+
     private function posContext(): array
     {
         $store = Store::query()->create(['store_name' => 'Calon Mantu', 'code' => 'CM'.uniqid(), 'is_active' => true]);

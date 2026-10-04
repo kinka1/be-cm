@@ -198,7 +198,10 @@ class CartController extends Controller
 
         $data = $request->validate([
             'items' => ['required', 'array'],
-            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('store_id', $cart->store_id)],
+            'items.*.type' => ['nullable', 'in:menu,custom'],
+            'items.*.product_id' => ['nullable', 'integer'],
+            'items.*.custom_name' => ['nullable', 'string', 'max:255'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
             'items.*.notes' => ['nullable', 'string'],
             'items.*.modifiers' => ['nullable', 'array', 'max:1'],
@@ -226,7 +229,10 @@ class CartController extends Controller
 
             foreach ($normalizedItems as $cartItem) {
                 $item = $cart->items()->create([
+                    'item_type' => $cartItem['type'],
                     'product_id' => $cartItem['product_id'],
+                    'custom_name' => $cartItem['custom_name'],
+                    'custom_unit_price' => $cartItem['unit_price'],
                     'quantity' => $cartItem['quantity'],
                     'notes' => $cartItem['notes'],
                 ]);
@@ -510,12 +516,7 @@ class CartController extends Controller
                     'payment_method' => $data['payment_method'],
                     'amount_paid' => $data['amount_paid'] ?? null,
                     'discount' => $data['discount'] ?? 0,
-                    'items' => $lockedCart->items->map(fn (PosCartItem $item) => [
-                        'product_id' => $item->product_id,
-                        'quantity' => (float) $item->quantity,
-                        'notes' => $item->notes,
-                        'modifiers' => $this->orderModifierPayload($item),
-                    ])->all(),
+                    'items' => $lockedCart->items->map(fn (PosCartItem $item) => $this->orderItemPayload($item))->all(),
                 ]);
 
                 $lockedCart->items()->delete();
@@ -563,7 +564,8 @@ class CartController extends Controller
         $cart->load(['items.product', 'items.modifiers']);
 
         $items = $cart->items->map(function (PosCartItem $item): array {
-            $price = (float) $item->product->selling_price;
+            $type = $item->item_type ?: 'menu';
+            $price = $type === 'custom' ? (float) $item->custom_unit_price : (float) $item->product->selling_price;
             $quantity = (float) $item->quantity;
             $modifiers = $item->modifiers->map(fn ($modifier): array => [
                 'modifier_id' => $modifier->modifier_id,
@@ -574,10 +576,12 @@ class CartController extends Controller
             ])->values();
 
             return [
+                'type' => $type,
                 'id' => $item->id,
                 'product_id' => $item->product_id,
-                'product_name' => $item->product->product_name,
-                'quantity' => $quantity,
+                'product_name' => $type === 'custom' ? $item->custom_name : $item->product->product_name,
+                'custom_name' => $item->custom_name,
+                'quantity' => (int) $quantity,
                 'unit_price' => $price,
                 'notes' => $item->notes,
                 'modifiers' => $modifiers,
@@ -640,7 +644,41 @@ class CartController extends Controller
 
     private function cartItemPayload(PosCart $cart, array $item): array
     {
-        $product = Product::query()->with('category')->where('store_id', $cart->store_id)->findOrFail($item['product_id']);
+        $type = $item['type'] ?? 'menu';
+
+        if ($type === 'custom') {
+            if (blank($item['custom_name'] ?? null)) {
+                throw ValidationException::withMessages(['items' => ['Nama custom item wajib diisi.']]);
+            }
+
+            if (!array_key_exists('unit_price', $item)) {
+                throw ValidationException::withMessages(['items' => ['Harga custom item wajib diisi.']]);
+            }
+
+            if (!empty($item['modifiers'])) {
+                throw ValidationException::withMessages(['items' => ['Custom item tidak mendukung modifier.']]);
+            }
+
+            return [
+                'type' => 'custom',
+                'product_id' => null,
+                'custom_name' => trim((string) $item['custom_name']),
+                'unit_price' => (float) $item['unit_price'],
+                'quantity' => (float) $item['quantity'],
+                'notes' => $item['notes'] ?? null,
+                'modifiers' => [],
+            ];
+        }
+
+        if (empty($item['product_id'])) {
+            throw ValidationException::withMessages(['items' => ['Product wajib diisi untuk item menu.']]);
+        }
+
+        $product = Product::query()->with('category')->where('store_id', $cart->store_id)->find($item['product_id']);
+
+        if (!$product) {
+            throw ValidationException::withMessages(['items' => ['Produk tidak ditemukan pada toko cart.']]);
+        }
         $modifiers = collect($item['modifiers'] ?? []);
         $modifierIds = $modifiers->pluck('modifier_id');
 
@@ -670,7 +708,10 @@ class CartController extends Controller
         })->values()->all();
 
         return [
+            'type' => 'menu',
             'product_id' => $product->id,
+            'custom_name' => null,
+            'unit_price' => null,
             'quantity' => (float) $item['quantity'],
             'notes' => $item['notes'] ?? null,
             'modifiers' => $snapshots,
@@ -679,7 +720,26 @@ class CartController extends Controller
 
     private function cartItemKey(array $item): string
     {
-        return $item['product_id'].'|'.($item['notes'] ?? '').'|'.collect($item['modifiers'])->pluck('modifier_id')->sort()->implode(',');
+        if ($item['type'] === 'custom') {
+            return 'custom|'.$item['custom_name'].'|'.$item['unit_price'].'|'.($item['notes'] ?? '');
+        }
+
+        return 'menu|'.$item['product_id'].'|'.($item['notes'] ?? '').'|'.collect($item['modifiers'])->pluck('modifier_id')->sort()->implode(',');
+    }
+
+    private function orderItemPayload(PosCartItem $item): array
+    {
+        $type = $item->item_type ?: 'menu';
+
+        return [
+            'type' => $type,
+            'product_id' => $item->product_id,
+            'custom_name' => $item->custom_name,
+            'unit_price' => $type === 'custom' ? (float) $item->custom_unit_price : null,
+            'quantity' => (float) $item->quantity,
+            'notes' => $item->notes,
+            'modifiers' => $this->orderModifierPayload($item),
+        ];
     }
 
     private function orderModifierPayload(PosCartItem $item): array

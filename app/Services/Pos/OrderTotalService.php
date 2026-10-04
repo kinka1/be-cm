@@ -9,7 +9,12 @@ class OrderTotalService
 {
     public function calculate(array $items, float $discount = 0, float $paymentFee = 0, ?int $storeId = null): array
     {
-        $productIds = collect($items)->pluck('product_id')->unique()->values();
+        $productIds = collect($items)
+            ->filter(fn (array $item): bool => ($item['type'] ?? 'menu') === 'menu')
+            ->pluck('product_id')
+            ->filter()
+            ->unique()
+            ->values();
         $productQuery = Product::query()->whereIn('id', $productIds);
 
         if ($storeId !== null) {
@@ -18,11 +23,42 @@ class OrderTotalService
 
         $products = $productQuery->get()->keyBy('id');
 
-        if ($products->count() !== $productIds->count()) {
+        if ($productIds->isNotEmpty() && $products->count() !== $productIds->count()) {
             throw ValidationException::withMessages(['items' => ['Produk tidak ditemukan pada toko yang dipilih']]);
         }
 
         $details = collect($items)->map(function (array $item) use ($products) {
+            $type = $item['type'] ?? 'menu';
+
+            if ($type === 'custom') {
+                if (blank($item['custom_name'] ?? null) || !array_key_exists('unit_price', $item)) {
+                    throw ValidationException::withMessages(['items' => ['Nama dan harga custom item wajib diisi.']]);
+                }
+
+                if (!empty($item['modifiers'])) {
+                    throw ValidationException::withMessages(['items' => ['Custom item tidak mendukung modifier.']]);
+                }
+
+                $quantity = (float) $item['quantity'];
+                $unitPrice = (float) $item['unit_price'];
+
+                return [
+                    'type' => 'custom',
+                    'product' => null,
+                    'product_id' => null,
+                    'item_name' => trim((string) $item['custom_name']),
+                    'quantity' => $quantity,
+                    'unit_price' => $unitPrice,
+                    'modifiers' => collect(),
+                    'subtotal' => $quantity * $unitPrice,
+                    'notes' => $item['notes'] ?? null,
+                ];
+            }
+
+            if (empty($item['product_id']) || !$products->has($item['product_id'])) {
+                throw ValidationException::withMessages(['items' => ['Produk tidak ditemukan pada toko yang dipilih']]);
+            }
+
             $product = $products->get($item['product_id']);
             $quantity = (float) $item['quantity'];
             $unitPrice = (float) $product->selling_price;
@@ -41,8 +77,10 @@ class OrderTotalService
             $baseSubtotal = $quantity * $unitPrice;
 
             return [
+                'type' => 'menu',
                 'product' => $product,
                 'product_id' => $product->id,
+                'item_name' => $product->product_name,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
                 'modifiers' => $modifiers,

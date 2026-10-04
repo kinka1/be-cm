@@ -78,7 +78,9 @@ class CreateCashierOrderService
             foreach ($totals['details'] as $detail) {
                 $orderDetail = OrderDetail::create([
                     'order_id' => $order->id,
+                    'item_type' => $detail['type'] ?? 'menu',
                     'product_id' => $detail['product_id'],
+                    'item_name' => $detail['item_name'],
                     'quantity' => $detail['quantity'],
                     'unit_price' => $detail['unit_price'],
                     'subtotal' => $detail['subtotal'],

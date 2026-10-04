@@ -3763,6 +3763,7 @@
                     "POS Cart"
                 ],
                 "summary": "Replace/sync named POS cart items",
+                "description": "Supports menu items and custom manual cashier items. For custom items use type=custom, custom_name, unit_price, and no modifiers.",
                 "operationId": "beccd636b914d09a3b624d736c2576a9",
                 "parameters": [
                     {
@@ -3787,12 +3788,31 @@
                                         "type": "array",
                                         "items": {
                                             "required": [
-                                                "product_id",
                                                 "quantity"
                                             ],
                                             "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "menu",
+                                                    "enum": [
+                                                        "menu",
+                                                        "custom"
+                                                    ]
+                                                },
                                                 "product_id": {
-                                                    "type": "integer"
+                                                    "description": "Required for menu items",
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "custom_name": {
+                                                    "description": "Required for custom items",
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "unit_price": {
+                                                    "description": "Required for custom items",
+                                                    "type": "number",
+                                                    "nullable": true
                                                 },
                                                 "quantity": {
                                                     "type": "number"
@@ -4510,8 +4530,24 @@
                                         "type": "array",
                                         "items": {
                                             "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "menu",
+                                                        "custom"
+                                                    ]
+                                                },
                                                 "product_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                "custom_name": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "nullable": true
                                                 },
                                                 "quantity": {
                                                     "type": "number"

@@ -13,6 +13,10 @@ class StockAvailabilityService
         $required = [];
 
         foreach ($details as $detail) {
+            if (($detail['type'] ?? 'menu') === 'custom') {
+                continue;
+            }
+
             $product = $detail['product'];
 
             if (!$product->is_active) {

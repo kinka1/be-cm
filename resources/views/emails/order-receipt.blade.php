@@ -44,7 +44,7 @@
             @foreach ($order->details as $detail)
                 <tr>
                     <td style="border-bottom: 1px solid #eee; padding: 8px 0;">
-                        {{ $detail->product?->product_name ?? 'Item' }}
+                        {{ $detail->item_name ?? $detail->product?->product_name ?? 'Item' }}
                         @foreach ($detail->modifiers as $modifier)
                             <div style="font-size: 12px; color: #555;">{{ $modifier->name }} +Rp {{ number_format((float) $modifier->price_delta, 0, ',', '.') }}</div>
                         @endforeach

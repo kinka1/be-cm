@@ -13,6 +13,10 @@ class StockDeductionService
         $order->loadMissing('details.product');
 
         foreach ($order->details as $detail) {
+            if (($detail->item_type ?: 'menu') === 'custom' || !$detail->product_id) {
+                continue;
+            }
+
             $recipes = Recipe::query()->where('product_id', $detail->product_id)->get();
 
             if ($recipes->isEmpty()) {
